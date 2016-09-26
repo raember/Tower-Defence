@@ -14,16 +14,21 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+package base;
 
-import java.awt.Graphics2D;
+import java.awt.Graphics;
 
 /**
  * @author Raphael
  * @date 21.09.2016
  */
-public class GameEngine {
+public abstract class GameObject {
 
-    public void render(Graphics2D g) {
-        
+    protected Game theGame;
+
+    public GameObject(Game theGame) {
+        this.theGame = theGame;
     }
+
+    public abstract void update(double deltatime, double abstime);
 }

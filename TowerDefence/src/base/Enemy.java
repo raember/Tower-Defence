@@ -14,15 +14,20 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+
 package base;
 
 /**
  * @author Raphael
- * @date 21.09.2016
+ * @date 26.09.2016
  */
-public abstract class CollidableObject extends DrawObject {
+public abstract class Enemy extends DrawableObject {
 
-    public abstract boolean CollidesWith(CollidableObject obj);
+    public double radiusOfVulnerability;
+    public int health;
+    
+    public Enemy(Game theGame) {
+        super(theGame);
+    }
 
-    public abstract void CheckCollision(ListOf<CollidableObject> list);
 }

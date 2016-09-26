@@ -16,16 +16,29 @@
  */
 package base;
 
-import java.awt.Graphics;
-
 /**
  * @author Raphael
- * @date 21.09.2016
+ * @date 26.09.2016
  */
-public abstract class DrawObject {
+public abstract class Bullet extends DrawableObject {
 
-    public int X;
-    public int Y;
+    public double rangeOfImpact;
+    protected int damage;
 
-    public abstract void Draw(Graphics g);
+    public Bullet(Game theGame) {
+        super(theGame);
+    }
+
+    @Override
+    public void update(double deltatime, double abstime) {
+        for (Enemy tempEnemy : theGame.listEnemies.where(e
+                -> e.center.distance(center)
+                <= rangeOfImpact + e.radiusOfVulnerability)) {
+            damageEnemy(tempEnemy);
+        }
+    }
+
+    protected void damageEnemy(Enemy enemy) {
+        enemy.health -= damage;
+    }
 }

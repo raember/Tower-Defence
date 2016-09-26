@@ -24,6 +24,8 @@ import java.awt.Graphics;
  */
 public class MainForm extends javax.swing.JFrame {
 
+    private Game theGame = new Game();
+
     /**
      * Creates new form MainForm
      */
@@ -109,8 +111,6 @@ public class MainForm extends javax.swing.JFrame {
     }//GEN-LAST:event_formFocusGained
 
     private void DrawPanelMouseMoved(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_DrawPanelMouseMoved
-        MouseX = evt.getX();
-        MouseY = evt.getY();
         this.repaint();
     }//GEN-LAST:event_DrawPanelMouseMoved
 
@@ -149,19 +149,8 @@ public class MainForm extends javax.swing.JFrame {
         });
     }
 
-    private int MouseX = this.getWidth()/2;
-    private int MouseY = 0;
     public void paint(Graphics g) {
-        g.clearRect(0, 0, getWidth(), getHeight());
-        int xCenter = this.getWidth()/2;
-        int yCenter = this.getHeight()/2;
-        //g.setClip(0, 30, this.getWidth(), this.getHeight());
-        //g.drawLine(0, 0, this.getWidth(), this.getHeight());
-        Player pl = new Player();
-        pl.X = xCenter;
-        pl.Y = yCenter;
-        pl.Face(MouseX, MouseY);
-        pl.Draw(g);
+
     }
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JPanel DrawPanel;
