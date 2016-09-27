@@ -1,4 +1,4 @@
-package base;
+package base.Game;
 
 /*
  * Copyright (C) 2016 Raphael
@@ -16,6 +16,10 @@ package base;
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+import base.Game.Tower;
+import base.Game.GameObject;
+import base.Game.Enemy;
+import base.ListOf;
 import java.awt.Graphics2D;
 import java.awt.Point;
 

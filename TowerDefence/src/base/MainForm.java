@@ -16,6 +16,7 @@
  */
 package base;
 
+import base.Game.Game;
 import java.awt.Graphics;
 
 /**
