@@ -22,6 +22,11 @@ import base.Game.Enemy;
 import base.ListOf;
 import java.awt.Graphics2D;
 import java.awt.Point;
+import java.io.*;
+import java.nio.charset.Charset;
+import java.nio.file.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * @author Raphael
@@ -32,6 +37,20 @@ public class Game {
     public ListOf<Enemy> listEnemies = new ListOf();
     public ListOf<Tower> listTowers = new ListOf();
     public ListOf<Bullet> listBullets = new ListOf();
+
+    public boolean loadMap(File csv) {
+        if (!csv.exists()) {
+            return false;
+        }
+        String content = null;
+        try {
+            byte[] encoded = Files.readAllBytes(Paths.get(csv.getAbsolutePath()));
+            content = new String(encoded, Charset.defaultCharset());
+        } catch (Exception ex) {
+            return false;
+        }
+        return true;
+    }
 
     public void render(Graphics2D g) {
         listEnemies.forEach(e -> e.paint(g));
