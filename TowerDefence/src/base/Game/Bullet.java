@@ -16,6 +16,8 @@
  */
 package base.Game;
 
+import java.awt.Point;
+
 /**
  * @author Raphael
  * @date 26.09.2016
@@ -23,7 +25,9 @@ package base.Game;
 public abstract class Bullet extends DrawableObject {
 
     public double rangeOfImpact;
-    protected int damage;
+    public int damage;
+    public double facingangle;
+    public double speed;
 
     public Bullet(Game theGame) {
         super(theGame);
@@ -35,10 +39,15 @@ public abstract class Bullet extends DrawableObject {
                 -> e.center.distance(center)
                 <= rangeOfImpact + e.radiusOfVulnerability)) {
             damageEnemy(tempEnemy);
+
         }
     }
 
     protected void damageEnemy(Enemy enemy) {
         enemy.health -= damage;
+    }
+
+    protected void destroy() {
+        theGame.listBullets.remove(this);
     }
 }

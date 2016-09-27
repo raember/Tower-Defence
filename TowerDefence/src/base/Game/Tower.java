@@ -18,7 +18,6 @@ package base.Game;
 
 import base.ListOf;
 import java.awt.Point;
-import java.util.Comparator;
 
 /**
  * @author Raphael
@@ -61,7 +60,10 @@ public abstract class Tower extends DrawableObject {
 
     protected void shootEnemy(Enemy enemy) {
         //TODO: Implement method to shoot an enemy.
-
+        Bullet tempBullet = createBullet();
+        tempBullet.center=center;
+        tempBullet.facingangle=facingangle;
+        theGame.listBullets.add(tempBullet);
     }
 
     @Override
@@ -76,4 +78,6 @@ public abstract class Tower extends DrawableObject {
     protected void destroy() {
         theGame.listTowers.remove(this);
     }
+    
+    protected abstract Bullet createBullet();
 }

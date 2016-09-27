@@ -29,13 +29,20 @@ import java.awt.Point;
  */
 public class Game {
 
-    public ListOf<GameObject> listGO = new ListOf();
     public ListOf<Enemy> listEnemies = new ListOf();
     public ListOf<Tower> listTowers = new ListOf();
-    public ListOf<GameObject> listBullets = new ListOf();
+    public ListOf<Bullet> listBullets = new ListOf();
 
     public void render(Graphics2D g) {
+        listEnemies.forEach(e -> e.paint(g));
+        listTowers.forEach(t -> t.paint(g));
+        listBullets.forEach(b -> b.paint(g));
+    }
 
+    public void update(double deltatime, double abstime) {
+        listEnemies.forEach(e -> e.update(deltatime, abstime));
+        listTowers.forEach(t -> t.update(deltatime, abstime));
+        listBullets.forEach(b -> b.update(deltatime, abstime));
     }
 
     public ListOf<Enemy> findNearestEnemies(Point from, double range) {

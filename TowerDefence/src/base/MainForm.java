@@ -18,6 +18,8 @@ package base;
 
 import base.Game.Game;
 import java.awt.Graphics;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * @author Raphael
@@ -26,12 +28,42 @@ import java.awt.Graphics;
 public class MainForm extends javax.swing.JFrame {
 
     private Game theGame = new Game();
+    private boolean isGameRunning = true;
+    private double absTime = 0d;
+    private long initTime = 0;
+    private long lastLoopTime = 0;
+    private double deltaTime = 0d;
+    private int realFPS = 0;
+    private int lastFpsTime = 0;
+    private final int DESIRED_FPS = 60;
+    private final long DESIRED_TIMESTEP = 1000000000 / DESIRED_FPS;
 
     /**
      * Creates new form MainForm
      */
     public MainForm() {
         initComponents();
+        initTime = System.nanoTime();
+        while (isGameRunning) {
+            long now = System.nanoTime();
+            long updateLength = now - lastLoopTime;
+            lastLoopTime = now;
+            double delta = updateLength / ((double) DESIRED_TIMESTEP);
+            lastFpsTime += updateLength;
+            realFPS++;
+            if (lastFpsTime >= 1000000000) {
+                System.out.println(realFPS);
+                lastFpsTime = 0;
+                realFPS = 0;
+            }
+            theGame.update(deltaTime, absTime);
+            this.repaint();
+            try {
+                Thread.sleep((lastLoopTime - System.nanoTime() + DESIRED_TIMESTEP) / 1000000);
+            } catch (InterruptedException ex) {
+                System.out.println("AAAAAHHHHH!!!!");
+            }
+        }
     }
 
     /**
