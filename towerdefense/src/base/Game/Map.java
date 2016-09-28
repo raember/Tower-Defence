@@ -43,6 +43,7 @@ public final class Map extends DrawableObject {
             return null;
         }
         //TODO: Parse the map data.
+        return null;
     }
 
     @Override
