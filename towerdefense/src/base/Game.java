@@ -5,15 +5,10 @@
  */
 package base;
 
-import java.awt.Canvas;
-import java.awt.Dimension;
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
-import java.awt.image.BufferStrategy;
-import javax.swing.JFrame;
-import javax.swing.JPanel;
+import java.awt.*;
+import java.awt.event.*;
+import java.awt.image.*;
+import javax.swing.*;
 
 /**
  * @author Raphael
@@ -21,43 +16,30 @@ import javax.swing.JPanel;
  */
 public class Game extends Canvas {
 
-    private JFrame frame;
-    private BufferStrategy strategy;
+    private final JFrame FRAME;
+    private final BufferStrategy BUFFER_STRATEGY;
 
     public Game() {
-        frame = new JFrame("Tower Defense");
-        JPanel panel = (JPanel) frame.getContentPane();
+        FRAME = new JFrame("Tower Defense");
+        JPanel panel = (JPanel) FRAME.getContentPane();
         panel.setPreferredSize(new Dimension(800, 600));
         panel.setLayout(null);
         setBounds(0, 0, 800, 600);
         panel.add(this);
         setIgnoreRepaint(true);
-        frame.pack();
-        frame.setResizable(false);
-        frame.setVisible(true);
-
-		// add a listener to respond to the user closing the window. If they
-        // do we'd like to exit the game
-        frame.addWindowListener(new WindowAdapter() {
+        FRAME.pack();
+        FRAME.setResizable(false);
+        FRAME.setVisible(true);
+        FRAME.addWindowListener(new WindowAdapter() {
+            @Override
             public void windowClosing(WindowEvent e) {
                 System.exit(0);
             }
         });
-
-		// add a key input system (defined below) to our canvas
-        // so we can respond to key pressed
         addKeyListener(new KeyInputHandler());
-
-        // request the focus so key events come to us
         requestFocus();
-
-		// create the buffering strategy which will allow AWT
-        // to manage our accelerated graphics
         createBufferStrategy(2);
-        strategy = getBufferStrategy();
-
-		// initialise the entities in our game so there's something
-        // to see at startup
+        BUFFER_STRATEGY = getBufferStrategy();
     }
 
     /**
@@ -68,6 +50,7 @@ public class Game extends Canvas {
     }
 
     private boolean waitingForKeyPress = true;
+
     /**
      * A class to handle keyboard input from the user. The class handles both
      * dynamic input during game play, i.e. left/right and shoot, and more
@@ -94,6 +77,7 @@ public class Game extends Canvas {
          *
          * @param e The details of the key that was pressed
          */
+        @Override
         public void keyPressed(KeyEvent e) {
             // if we're waiting for an "any key" typed then we don't 
             // want to do anything with just a "press"
@@ -110,13 +94,14 @@ public class Game extends Canvas {
 //            if (e.getKeyCode() == KeyEvent.VK_SPACE) {
 //                firePressed = true;
 //            } 
-       }
+        }
 
         /**
          * Notification from AWT that a key has been released.
          *
          * @param e The details of the key that was released
          */
+        @Override
         public void keyReleased(KeyEvent e) {
             // if we're waiting for an "any key" typed then we don't 
             // want to do anything with just a "released"
@@ -141,18 +126,19 @@ public class Game extends Canvas {
          *
          * @param e The details of the key that was typed.
          */
+        @Override
         public void keyTyped(KeyEvent e) {
-			// if we're waiting for a "any key" type then
+            // if we're waiting for a "any key" type then
             // check if we've recieved any recently. We may
 
-			// have had a keyType() event from the user releasing
+            // have had a keyType() event from the user releasing
             // the shoot or move keys, hence the use of the "pressCount"
             // counter.
             if (waitingForKeyPress) {
                 if (pressCount == 1) {
-					// since we've now recieved our key typed
+                    // since we've now recieved our key typed
 
-					// event we can mark it as such and start 
+                    // event we can mark it as such and start 
                     // our new game
                     waitingForKeyPress = false;
                     //startGame();
