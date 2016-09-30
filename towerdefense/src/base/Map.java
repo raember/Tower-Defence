@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package base.Game;
+package base;
 
 import java.awt.Graphics2D;
 import java.io.File;
@@ -27,7 +27,7 @@ import java.nio.file.*;
  */
 public final class Map extends DrawableObject {
 
-    private Map(Game game) {
+    private Map(GameForm game) {
         super(game);
     }
 

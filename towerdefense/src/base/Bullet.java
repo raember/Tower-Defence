@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package base.Game;
+package base;
 
 import java.awt.Point;
 
@@ -29,13 +29,13 @@ public abstract class Bullet extends DrawableObject {
     public double facingangle;
     public double speed;
 
-    public Bullet(Game theGame) {
-        super(theGame);
+    public Bullet(GameForm Game) {
+        super(Game);
     }
 
     @Override
     public void update(double deltatime, double abstime) {
-        for (Enemy tempEnemy : theGame.listEnemies.where(e
+        for (Enemy tempEnemy : Game.listEnemies.where(e
                 -> e.center.distance(center)
                 <= rangeOfImpact + e.radiusOfVulnerability)) {
             damageEnemy(tempEnemy);
@@ -48,6 +48,6 @@ public abstract class Bullet extends DrawableObject {
     }
 
     protected void destroy() {
-        theGame.listBullets.remove(this);
+        Game.listBullets.remove(this);
     }
 }

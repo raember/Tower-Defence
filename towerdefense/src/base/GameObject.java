@@ -14,20 +14,21 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+package base;
 
-package base.Game;
+import java.awt.Graphics;
 
 /**
  * @author Raphael
- * @date 26.09.2016
+ * @date 21.09.2016
  */
-public abstract class Enemy extends DrawableObject {
+public abstract class GameObject {
 
-    public double radiusOfVulnerability;
-    public int health;
-    
-    public Enemy(Game theGame) {
-        super(theGame);
+    protected GameForm Game;
+
+    public GameObject(GameForm game) {
+        this.Game = game;
     }
 
+    public abstract void update(double deltatime, double abstime);
 }

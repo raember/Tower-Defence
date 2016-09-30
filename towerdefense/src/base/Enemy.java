@@ -14,21 +14,20 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package base.Game;
 
-import java.awt.*;
+package base;
 
 /**
  * @author Raphael
  * @date 26.09.2016
  */
-public abstract class DrawableObject extends GameObject {
+public abstract class Enemy extends DrawableObject {
 
-    protected Point center;
+    public double radiusOfVulnerability;
+    public int health;
     
-    public DrawableObject(Game theGame) {
-        super(theGame);
+    public Enemy(GameForm game) {
+        super(game);
     }
 
-    public abstract void paint(Graphics2D g);
 }

@@ -14,8 +14,9 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package base.Game;
+package base;
 
+import base.ListOf;
 import base.ListOf;
 import java.awt.Point;
 
@@ -32,12 +33,12 @@ public abstract class Tower extends DrawableObject {
     protected int level;
     public int health;
 
-    public Tower(Game theGame) {
-        super(theGame);
+    public Tower(GameForm game) {
+        super(game);
     }
 
     protected void handleEnemies() {
-        ListOf<Enemy> nearestEnemies = theGame.findNearestEnemies(center, range);
+        ListOf<Enemy> nearestEnemies = Game.findNearestEnemies(center, range);
         if (!nearestEnemies.any()) {
             angularspeed = 0d;
             return;
@@ -63,7 +64,7 @@ public abstract class Tower extends DrawableObject {
         Bullet tempBullet = createBullet();
         tempBullet.center=center;
         tempBullet.facingangle=facingangle;
-        theGame.listBullets.add(tempBullet);
+        Game.listBullets.add(tempBullet);
     }
 
     @Override
@@ -76,7 +77,7 @@ public abstract class Tower extends DrawableObject {
     }
 
     protected void destroy() {
-        theGame.listTowers.remove(this);
+        Game.listTowers.remove(this);
     }
     
     protected abstract Bullet createBullet();

@@ -14,21 +14,21 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package base.Game;
+package base;
 
-import java.awt.Graphics;
+import java.awt.*;
 
 /**
  * @author Raphael
- * @date 21.09.2016
+ * @date 26.09.2016
  */
-public abstract class GameObject {
+public abstract class DrawableObject extends GameObject {
 
-    protected Game theGame;
-
-    public GameObject(Game theGame) {
-        this.theGame = theGame;
+    protected Point center;
+    
+    public DrawableObject(GameForm game) {
+        super(game);
     }
 
-    public abstract void update(double deltatime, double abstime);
+    public abstract void paint(Graphics2D g);
 }
