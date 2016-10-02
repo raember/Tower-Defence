@@ -18,6 +18,7 @@ package base;
 
 import java.awt.Color;
 import java.awt.Graphics2D;
+import java.awt.Rectangle;
 import java.io.File;
 import java.nio.charset.Charset;
 import java.nio.file.*;
@@ -65,8 +66,6 @@ public final class Map extends DrawableObject {
         }
         return newMap;
     }
-
-    private int tileWidth = 30;
     private MapData[][] data;
 
     private Map(GameForm game) {
@@ -74,11 +73,11 @@ public final class Map extends DrawableObject {
     }
 
     public int getWidth() {
-        return tileWidth * data[0].length;
+        return Game.TILEWIDTH * data[0].length;
     }
 
     public int getHeight() {
-        return tileWidth * data.length;
+        return Game.TILEWIDTH * data.length;
     }
 
     @Override
@@ -87,14 +86,14 @@ public final class Map extends DrawableObject {
         for (MapData[] mdl : data) {
             int x = 0;
             for (MapData md : mdl) {
-                md.paint(g, x, y, tileWidth);
-                g.setColor(new Color(46, 46, 48));
-                g.drawLine(x, y, x, y + tileWidth);
-                g.drawLine(x, y, x + tileWidth, y);
-                x += tileWidth;
+                md.paint(g, Game, x, y, Game.TILEWIDTH);
+                g.setColor(Game.colBackground);
+                g.drawLine(x, y, x, y + Game.TILEWIDTH);
+                g.drawLine(x, y, x + Game.TILEWIDTH, y);
+                x += Game.TILEWIDTH;
             }
             x = 0;
-            y += tileWidth;
+            y += Game.TILEWIDTH;
         }
     }
 
@@ -102,6 +101,10 @@ public final class Map extends DrawableObject {
     public void update(double deltatime, double abstime) {
     }
 
+    public Rectangle getRectangle() {
+        return new Rectangle(Game.PAINTMARGIN, Game.PAINTMARGIN, Game.width,
+                Game.height);
+    }
 
     private enum MapData {
 
@@ -126,21 +129,25 @@ public final class Map extends DrawableObject {
             return null;
         }
 
-        public void paint(Graphics2D g, int x, int y, int width) {
+        public void paint(Graphics2D g, GameForm game, int x, int y, int width) {
             switch (this) {
                 case WALL:
-                    g.setColor(new Color(66, 66, 68));
+                    g.setColor(game.colWallTile);
                     g.fillRect(x, y, width, width);
                     return;
                 case PATH:
+                    //The Path-color remains the same as the background.
                     return;
                 case START:
+                    g.setColor(game.colStartTile);
+                    g.fillRect(x, y, width, width);
+                    return;
                 case END:
-                    g.setColor(new Color(56, 56, 58));
+                    g.setColor(game.colEndTile);
                     g.fillRect(x, y, width, width);
                     return;
                 case TOWER:
-                    g.setColor(new Color(0, 200, 255));
+                    g.setColor(game.colTowerTile);
                     g.fillRect(x, y, width, width);
                     return;
             }

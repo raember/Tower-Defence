@@ -42,26 +42,38 @@ public class GameForm extends Canvas {
     public ListOf<Tower> listTowers = new ListOf();
     public ListOf<Bullet> listBullets = new ListOf();
     public Map currentMap;
+    public BuildingManager buildManager = new BuildingManager(this);
 
-    private final String GAMETITLE = "Tower Defense";
+    private final String GAMETITLE = "Tower Defence";
     private final JFrame FRAME;
     private final JPanel PANEL;
     private final BufferStrategy BUFFER_STRATEGY;
-    private int width = 800;
-    private int height = 600;
+    public final MouseInputHandler Mouse = new MouseInputHandler();
+    public final KeyInputHandler Keys = new KeyInputHandler();
+
+    public boolean isGameRunning;
+    public int balance = 10000;
+
+    public int width = 800;
+    public int height = 600;
+    public final int PAINTMARGIN = 10;
     private final int WIDTHCORRECTION = -10;
     private final int HEIGHTCORRECTION = -10;
-    private final int XCENTER = width / 2;
-    private final int YCENTER = height / 2;
 
     private final long NSPS = 1000000000;
     private final int NSPMS = 1000000;
     private final int TARGET_FPS = 60;
     private int fps;
     private final long TARGET_NSPF = NSPS / TARGET_FPS;
-    private boolean isGameRunning;
 
-    private boolean waitingForKeyPress = true;
+    public final int TILEWIDTH = 30;
+
+    public final Color colGainsboro = new Color(220, 220, 220);
+    public final Color colBackground = new Color(46, 46, 48);
+    public final Color colStartTile = new Color(56, 56, 58);
+    public final Color colEndTile = new Color(56, 56, 58);
+    public final Color colWallTile = new Color(66, 66, 68);
+    public final Color colTowerTile = new Color(66, 66, 150);
 
     public GameForm() {
         FRAME = new JFrame(GAMETITLE);
@@ -78,7 +90,8 @@ public class GameForm extends Canvas {
                 System.exit(0);
             }
         });
-        addKeyListener(new KeyInputHandler());
+        addKeyListener(Keys);
+        addMouseMotionListener(Mouse);
         requestFocus();
         createBufferStrategy(2);
         BUFFER_STRATEGY = getBufferStrategy();
@@ -94,6 +107,7 @@ public class GameForm extends Canvas {
 
     @Override
     public void paint(Graphics g) {
+        g.translate(PAINTMARGIN, PAINTMARGIN);
         Graphics2D g2 = (Graphics2D) g;
         if (currentMap == null) {
             return;
@@ -102,38 +116,40 @@ public class GameForm extends Canvas {
         listEnemies.forEach(e -> e.paint(g2));
         listTowers.forEach(t -> t.paint(g2));
         listBullets.forEach(b -> b.paint(g2));
+        g.translate(-PAINTMARGIN, -PAINTMARGIN);
+        g.setColor(colGainsboro);
+        g.translate(Mouse.XMouse, Mouse.YMouse);
+        g.drawLine(-PAINTMARGIN, 0, PAINTMARGIN, 0);
+        g.drawLine(0, -PAINTMARGIN, 0, PAINTMARGIN);
+        g.translate(-Mouse.XMouse, -Mouse.YMouse);
     }
 
     public void update(double deltatime, double abstime) {
+        currentMap.update(deltatime, abstime);
+        buildManager.update(deltatime, abstime);
         listEnemies.forEach(e -> e.update(deltatime, abstime));
         listTowers.forEach(t -> t.update(deltatime, abstime));
         listBullets.forEach(b -> b.update(deltatime, abstime));
     }
 
-    public ListOf<Enemy> findNearestEnemies(Point from, double range) {
-        ListOf<Enemy> nearestEnemy = new ListOf();
-        double distance = range;
-        for (Enemy e : listEnemies) {
-            double tempDistance = from.distance(e.center);
-            if (!nearestEnemy.any() || tempDistance < distance) {
-                nearestEnemy.add(e);
-                distance = tempDistance;
-            }
+    public void startGame() {
+        if (loadMap("Map1.csv")) {
+            isGameRunning = true;
+            doGameLoop();
         }
-        return nearestEnemy.sortAll((Enemy e1, Enemy e2)
-                -> Double.compare(e1.center.distance(from),
-                        e2.center.distance(from)));
     }
 
-    public void startGame() {
-        isGameRunning = true;
+    public boolean loadMap(String csv) {
         String path = GameForm.class.getProtectionDomain().getCodeSource().
                 getLocation().getPath();
-        currentMap = Map.load(new File(path + "Map1.csv"), this);
+        currentMap = Map.load(new File(path + csv), this);
+        if (currentMap == null) {
+            return false;
+        }
         width = currentMap.getWidth() + 30;
         height = currentMap.getHeight() + 30;
         resize();
-        doGameLoop();
+        return true;
     }
 
     private void doGameLoop() {
@@ -154,20 +170,23 @@ public class GameForm extends Canvas {
             }
 
             if (!isFirstRun) {
-                Graphics2D g = (Graphics2D) BUFFER_STRATEGY.getDrawGraphics();
-                g.setColor(new Color(46, 46, 48));
-                g.fillRect(0, 0, width, height);
-//                g.setColor(Color.red);
-//                g.translate(XCENTER, YCENTER);
-//                g.drawLine(-10, 0, 10, 0);
-//                g.drawLine(0, -10, 0, 10);
-//                g.translate(-XCENTER, -YCENTER);
-                g.translate(10, 10);
-                paint(g);
-                absTime += deltaSec;
+                //TODO: Fix Mouse inputs.
+                System.out.println(Mouse.Button);
+                if (Mouse.Button == MouseEvent.BUTTON1) {
+                    Point posClicked = Mouse.getPoint();
+                    Rectangle mapArea = currentMap.getRectangle();
+                    if (mapArea.contains(posClicked)) {
+                        buildManager.placeTower(new NormalTower(this), posClicked);
+                    }
+                }
                 update(deltaSec, absTime);
+                Graphics2D g = (Graphics2D) BUFFER_STRATEGY.getDrawGraphics();
+                g.setColor(colBackground);
+                g.fillRect(0, 0, width, height);
+                paint(g);
+                BUFFER_STRATEGY.show();
+                absTime += deltaSec;
             }
-            BUFFER_STRATEGY.show();
 
             long absNow = System.nanoTime();
             try {
@@ -198,61 +217,7 @@ public class GameForm extends Canvas {
      */
     private class KeyInputHandler extends KeyAdapter {
 
-        /**
-         * The number of key presses we've had while waiting for an "any key"
-         * press
-         */
-        private int pressCount = 1;
-
-        /**
-         * Notification from AWT that a key has been pressed. Note that a key
-         * being pressed is equal to being pushed down but *NOT* released. Thats
-         * where keyTyped() comes in.
-         *
-         * @param e The details of the key that was pressed
-         */
-        @Override
-        public void keyPressed(KeyEvent e) {
-            // if we're waiting for an "any key" typed then we don't 
-            // want to do anything with just a "press"
-            if (waitingForKeyPress) {
-                return;
-            }
-
-//            if (e.getKeyCode() == KeyEvent.VK_LEFT) {
-//                leftPressed = true;
-//            }
-//            if (e.getKeyCode() == KeyEvent.VK_RIGHT) {
-//                rightPressed = true;
-//            }
-//            if (e.getKeyCode() == KeyEvent.VK_SPACE) {
-//                firePressed = true;
-//            } 
-        }
-
-        /**
-         * Notification from AWT that a key has been released.
-         *
-         * @param e The details of the key that was released
-         */
-        @Override
-        public void keyReleased(KeyEvent e) {
-            // if we're waiting for an "any key" typed then we don't 
-            // want to do anything with just a "released"
-            if (waitingForKeyPress) {
-                return;
-            }
-
-//            if (e.getKeyCode() == KeyEvent.VK_LEFT) {
-//                leftPressed = false;
-//            }
-//            if (e.getKeyCode() == KeyEvent.VK_RIGHT) {
-//                rightPressed = false;
-//            }
-//            if (e.getKeyCode() == KeyEvent.VK_SPACE) {
-//                firePressed = false;
-//            }
-        }
+        public KeyEvent typedKey;
 
         /**
          * Notification from AWT that a key has been typed. Note that typing a
@@ -262,30 +227,32 @@ public class GameForm extends Canvas {
          */
         @Override
         public void keyTyped(KeyEvent e) {
-            // if we're waiting for a "any key" type then
-            // check if we've recieved any recently. We may
-
-            // have had a keyType() event from the user releasing
-            // the shoot or move keys, hence the use of the "pressCount"
-            // counter.
-            if (waitingForKeyPress) {
-                if (pressCount == 1) {
-                    // since we've now recieved our key typed
-
-                    // event we can mark it as such and start 
-                    // our new game
-                    waitingForKeyPress = false;
-                    //startGame();
-                    pressCount = 0;
-                } else {
-                    pressCount++;
-                }
-            }
-
-            // if we hit escape, then quit the game
-            if (e.getKeyChar() == 27) {
+            typedKey = e;
+            if (e.getKeyChar() == KeyEvent.VK_ESCAPE) {
                 System.exit(0);
             }
+        }
+    }
+
+    private class MouseInputHandler extends MouseAdapter {
+
+        public int XMouse;
+        public int YMouse;
+        public int Button;
+
+        public Point getPoint() {
+            return new Point(XMouse, YMouse);
+        }
+
+        @Override
+        public void mouseClicked(MouseEvent e) {
+            Button = e.getButton();
+        }
+        
+        @Override
+        public void mouseMoved(MouseEvent e) {
+            XMouse = e.getX();
+            YMouse = e.getY();
         }
     }
 }

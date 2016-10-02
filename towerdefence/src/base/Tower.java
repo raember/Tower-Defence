@@ -16,8 +16,9 @@
  */
 package base;
 
-import base.ListOf;
-import base.ListOf;
+import java.awt.BasicStroke;
+import java.awt.Color;
+import java.awt.Graphics2D;
 import java.awt.Point;
 
 /**
@@ -26,59 +27,117 @@ import java.awt.Point;
  */
 public abstract class Tower extends DrawableObject {
 
-    protected double facingangle = 0d;
-    protected double angularspeed = 0d;
-    protected double maxangularspeed = 0d;
+    protected double facingAngle;
+    protected double desiredAngle;
+    protected double angularSpeed;
+    protected double maxAngularSpeed;
     protected double range;
-    protected int level;
+    protected int level = 1;
     public int health;
+    public int cost;
+    protected Color colBase;
+    protected Color colBaseBorder;
+    protected Color colHead;
+    protected Color colHeadBorder;
+    protected Enemy lastEnemy;
 
     public Tower(GameForm game) {
         super(game);
     }
 
     protected void handleEnemies() {
-        ListOf<Enemy> nearestEnemies = Game.findNearestEnemies(center, range);
+        ListOf<Enemy> nearestEnemies = findNearestEnemies(center, range);
         if (!nearestEnemies.any()) {
-            angularspeed = 0d;
+            angularSpeed = 0d;
             return;
         }
-        Enemy nearestEnemy = nearestEnemies.first();
-        if (!isFacing(nearestEnemy.center)) {
-            angularspeed = maxangularspeed;
-            return;
+        if (lastEnemy == null || !nearestEnemies.contains(lastEnemy)) {
+            lastEnemy = nearestEnemies.first();
         }
-        shootEnemy(nearestEnemy);
+        if (isFacing(lastEnemy.center)) {
+            shootEnemy(lastEnemy);
+        } else {
+            angularSpeed = face(lastEnemy.center);
+        }
     }
 
-    protected abstract void initiate();
+    protected ListOf<Enemy> findNearestEnemies(Point from, double range) {
+        ListOf<Enemy> nearestEnemy = new ListOf();
+        double distance = range;
+        for (Enemy e : Game.listEnemies) {
+            double tempDistance = from.distance(e.center);
+            if (!nearestEnemy.any() || tempDistance < distance) {
+                nearestEnemy.add(e);
+                distance = tempDistance;
+            }
+        }
+        return nearestEnemy.sortAll((Enemy e1, Enemy e2)
+                -> Double.compare(e1.center.distance(from),
+                        e2.center.distance(from)));
+    }
 
     protected boolean isFacing(Point p) {
         return Math.abs(Math.atan2(p.y - center.y,
-                p.x - center.x) - facingangle)
+                p.x - center.x) - facingAngle)
                 <= Double.MIN_NORMAL;
     }
 
+    protected double face(Point p) {
+        //FIXME: Fix detection of direction for angular movement.
+        double desiredAngle = Math.atan2(p.y - center.y, p.x - center.x);
+        if (Math.abs(desiredAngle - facingAngle) < Math.PI) {
+            return maxAngularSpeed;
+        } else {
+            return -maxAngularSpeed;
+        }
+    }
+
     protected void shootEnemy(Enemy enemy) {
-        //TODO: Implement method to shoot an enemy.
         Bullet tempBullet = createBullet();
-        tempBullet.center=center;
-        tempBullet.facingangle=facingangle;
+        tempBullet.center = center;
+        tempBullet.facingangle = facingAngle;
         Game.listBullets.add(tempBullet);
     }
 
     @Override
     public void update(double deltatime, double abstime) {
-        facingangle *= deltatime * angularspeed;
+        double deltaAngle = deltatime * angularSpeed;
+        if (Math.abs(desiredAngle - facingAngle) <= deltaAngle) {
+            facingAngle = desiredAngle;
+            angularSpeed = 0d;
+        }
         if (health <= 0) {
             destroy();
         }
         handleEnemies();
     }
 
+    @Override
+    public void paint(Graphics2D g) {
+        int width = Game.TILEWIDTH;
+        g.translate(center.x, center.y);
+        paintBase(g, width);
+        g.rotate(facingAngle, center.x, center.y);
+        paintHead(g, width);
+        g.rotate(-facingAngle, center.x, center.y);
+        g.translate(-center.x, -center.y);
+    }
+
+    private void paintBase(Graphics2D g, int width) {
+        g.setColor(colBase);
+        g.fillRect(-width / 2, -width / 2, width / 2, width / 2);
+        g.setColor(colBaseBorder);
+        g.setStroke(new BasicStroke(3));
+        g.drawRect(-width / 2, -width / 2, width / 2, width / 2);
+    }
+
+    protected abstract void paintHead(Graphics2D g, int width);
+
     protected void destroy() {
         Game.listTowers.remove(this);
     }
-    
+
+    public abstract boolean levelUp();
+
     protected abstract Bullet createBullet();
 }
