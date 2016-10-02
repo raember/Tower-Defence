@@ -66,11 +66,14 @@ Temporary Items
 
 ### NetBeans ###
 nbproject/private/
-build/
+# build/
+build/classes/base/
 nbbuild/
 dist/
 nbdist/
 .nb-gradle/
+*.netbeans_automatic_build
+*.netbeans_update_resources
 
 
 ### bluej ###
