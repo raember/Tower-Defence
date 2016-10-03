@@ -79,8 +79,8 @@ public final class Map extends DrawableObject {
     }
 
     public Point calcPosition(Point p) {
-        int x = p.x / Game.TILEWIDTH;
-        int y = p.y / Game.TILEWIDTH;
+        int x = (p.x + Game.MAPOFFSET / 2) / Game.TILEWIDTH;
+        int y = (p.y + Game.MAPOFFSET / 2) / Game.TILEWIDTH;
         return new Point(x * Game.TILEWIDTH + Game.TILEWIDTH / 2,
                 y * Game.TILEWIDTH + Game.TILEWIDTH / 2);
     }

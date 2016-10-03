@@ -54,6 +54,7 @@ public class GameForm extends Canvas {
 
     public int width = 800;
     public int height = 600;
+    public final int MAPOFFSET = 30;
     public final int PAINTMARGIN = 10;
     private final int WIDTHCORRECTION = -10;
     private final int HEIGHTCORRECTION = -10;
@@ -145,8 +146,8 @@ public class GameForm extends Canvas {
         if (currentMap == null) {
             return false;
         }
-        width = currentMap.getWidth() + 30;
-        height = currentMap.getHeight() + 30;
+        width = currentMap.getWidth() + MAPOFFSET;
+        height = currentMap.getHeight() + MAPOFFSET;
         resize();
         return true;
     }
