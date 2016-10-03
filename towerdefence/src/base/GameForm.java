@@ -16,12 +16,10 @@
  */
 package base;
 
-import com.sun.glass.ui.Application;
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.image.*;
 import java.io.File;
-import java.net.URLDecoder;
 import javax.swing.*;
 
 /**
@@ -48,8 +46,8 @@ public class GameForm extends Canvas {
     private final JFrame FRAME;
     private final JPanel PANEL;
     private final BufferStrategy BUFFER_STRATEGY;
-    public final MouseInputHandler Mouse = new MouseInputHandler();
-    public final KeyInputHandler Keys = new KeyInputHandler();
+    public final MouseInputHandler MOUSE = new MouseInputHandler();
+    public final KeyInputHandler KEYBOARD = new KeyInputHandler();
 
     public boolean isGameRunning;
     public int balance = 10000;
@@ -90,8 +88,9 @@ public class GameForm extends Canvas {
                 System.exit(0);
             }
         });
-        addKeyListener(Keys);
-        addMouseMotionListener(Mouse);
+        addKeyListener(KEYBOARD);
+        addMouseListener(MOUSE);
+        addMouseMotionListener(MOUSE);
         requestFocus();
         createBufferStrategy(2);
         BUFFER_STRATEGY = getBufferStrategy();
@@ -118,10 +117,10 @@ public class GameForm extends Canvas {
         listBullets.forEach(b -> b.paint(g2));
         g.translate(-PAINTMARGIN, -PAINTMARGIN);
         g.setColor(colGainsboro);
-        g.translate(Mouse.XMouse, Mouse.YMouse);
+        g.translate(MOUSE.XMouse, MOUSE.YMouse);
         g.drawLine(-PAINTMARGIN, 0, PAINTMARGIN, 0);
         g.drawLine(0, -PAINTMARGIN, 0, PAINTMARGIN);
-        g.translate(-Mouse.XMouse, -Mouse.YMouse);
+        g.translate(-MOUSE.XMouse, -MOUSE.YMouse);
     }
 
     public void update(double deltatime, double abstime) {
@@ -170,10 +169,12 @@ public class GameForm extends Canvas {
             }
 
             if (!isFirstRun) {
-                //TODO: Fix Mouse inputs.
-                System.out.println(Mouse.Button);
-                if (Mouse.Button == MouseEvent.BUTTON1) {
-                    Point posClicked = Mouse.getPoint();
+                //TODO: Fix MOUSE inputs.
+                if (MOUSE.Button != 0) {
+                    System.out.println(MOUSE.Button);
+                }
+                if (MOUSE.Button == MouseEvent.BUTTON1) {
+                    Point posClicked = MOUSE.getPoint();
                     Rectangle mapArea = currentMap.getRectangle();
                     if (mapArea.contains(posClicked)) {
                         buildManager.placeTower(new NormalTower(this), posClicked);
@@ -245,10 +246,20 @@ public class GameForm extends Canvas {
         }
 
         @Override
+        public void mousePressed(MouseEvent e) {
+            Button = e.getButton();
+        }
+
+        @Override
+        public void mouseReleased(MouseEvent e) {
+            Button = e.getButton();
+        }
+
+        @Override
         public void mouseClicked(MouseEvent e) {
             Button = e.getButton();
         }
-        
+
         @Override
         public void mouseMoved(MouseEvent e) {
             XMouse = e.getX();

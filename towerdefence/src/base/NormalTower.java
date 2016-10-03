@@ -14,11 +14,9 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
 package base;
 
-import java.awt.Graphics2D;
-import java.awt.Shape;
+import java.awt.*;
 
 /**
  * @author Raphael
@@ -28,16 +26,26 @@ public class NormalTower extends Tower {
 
     public NormalTower(GameForm game) {
         super(game);
+        cost = 100;
+        health = 100;
+        level = 1;
+        range = 300d;
+        colBase = new Color(0, 120, 255, 100);
+        colBaseBorder = new Color(0, 120, 255, 100);
+        colHead = colBase;
+        colHeadBorder = colBaseBorder;
     }
 
     @Override
     protected void paintHead(Graphics2D g, int width) {
         g.setColor(colHead);
-        g.fillRect(-width/5, -width/5, width/5, width/5);
-        g.fillRect(-width/8, -width/5, width/8, width);
+        g.setStroke(new BasicStroke(2));
+        g.fillRect(-width / 4, -width / 4, width / 2, width / 2);
+        g.fillRect(-width / 8, -width / 5 - width, width / 4, width);
         g.setColor(colHeadBorder);
-        g.drawRect(-width/5, -width/5, width/5, width/5);
-        g.drawRect(-width/8, -width/5, width/8, width);
+        g.setStroke(new BasicStroke(1));
+        g.drawRect(-width / 4, -width / 4, width / 2, width / 2);
+        g.drawRect(-width / 8, -width / 5 - width, width / 4, width);
     }
 
     @Override

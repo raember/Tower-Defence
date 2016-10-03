@@ -124,11 +124,14 @@ public abstract class Tower extends DrawableObject {
     }
 
     private void paintBase(Graphics2D g, int width) {
+        g.setColor(Game.colWallTile);
+        g.fillRect(-width / 2, -width / 2, width, width);
         g.setColor(colBase);
-        g.fillRect(-width / 2, -width / 2, width / 2, width / 2);
+        g.fillRect(-width / 2, -width / 2, width, width);
         g.setColor(colBaseBorder);
-        g.setStroke(new BasicStroke(3));
-        g.drawRect(-width / 2, -width / 2, width / 2, width / 2);
+        g.setStroke(new BasicStroke(2));
+        g.drawRect(-width / 2, -width / 2, width, width);
+        g.setStroke(new BasicStroke(1));
     }
 
     protected abstract void paintHead(Graphics2D g, int width);

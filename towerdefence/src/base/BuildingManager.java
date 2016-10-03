@@ -35,7 +35,7 @@ public class BuildingManager extends GameObject {
     public void placeTower(Tower tower, Point at) {
         if (Game.balance >= tower.cost) {
             Game.balance -= tower.cost;
-            tower.center = at;
+            tower.center = Game.currentMap.calcPosition(at);
             Game.listTowers.add(tower);
         }
     }

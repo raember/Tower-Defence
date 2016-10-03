@@ -16,9 +16,7 @@
  */
 package base;
 
-import java.awt.Color;
-import java.awt.Graphics2D;
-import java.awt.Rectangle;
+import java.awt.*;
 import java.io.File;
 import java.nio.charset.Charset;
 import java.nio.file.*;
@@ -42,7 +40,7 @@ public final class Map extends DrawableObject {
             return null;
         }
         Map newMap = new Map(game);
-        String[] lines = content.split("(?!0)\\r\\n");
+        String[] lines = content.split("(?!0)(\\r|)\\n");
         String[] characters = lines[0].split(";|\\r");
         String test = String.join(";", lines);
         newMap.data = new MapData[lines.length][characters.length];
@@ -78,6 +76,13 @@ public final class Map extends DrawableObject {
 
     public int getHeight() {
         return Game.TILEWIDTH * data.length;
+    }
+
+    public Point calcPosition(Point p) {
+        int x = p.x / Game.TILEWIDTH;
+        int y = p.y / Game.TILEWIDTH;
+        return new Point(x * Game.TILEWIDTH + Game.TILEWIDTH / 2,
+                y * Game.TILEWIDTH + Game.TILEWIDTH / 2);
     }
 
     @Override
