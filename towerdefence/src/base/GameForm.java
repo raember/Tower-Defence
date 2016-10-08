@@ -16,11 +16,26 @@
  */
 package base;
 
-import java.awt.*;
-import java.awt.event.*;
-import java.awt.image.*;
+import java.awt.Canvas;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.Point;
+import java.awt.Rectangle;
+import java.awt.RenderingHints;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.awt.image.BufferStrategy;
 import java.io.File;
-import javax.swing.*;
+import java.util.HashMap;
+import javax.swing.JFrame;
+import javax.swing.JPanel;
 
 /**
  * @author Raphael
@@ -36,25 +51,34 @@ public class GameForm extends Canvas {
         game.startGame();
     }
 
-    public ListOf<Enemy> listEnemies = new ListOf();
-    public ListOf<Tower> listTowers = new ListOf();
-    public ListOf<Bullet> listBullets = new ListOf();
-    public Map currentMap;
-    public BuildingManager buildManager = new BuildingManager(this);
+    private ListOf<Enemy> listEnemies = new ListOf();
+    private ListOf<Tower> listTowers = new ListOf();
+    private ListOf<Bullet> listBullets = new ListOf();
+    private GameMap currentMap;
+    private BuildingManager buildManager = new BuildingManager(this);
 
     private final String GAMETITLE = "Tower Defence";
     private final JFrame FRAME;
     private final JPanel PANEL;
     private final BufferStrategy BUFFER_STRATEGY;
-    public final MouseInputHandler MOUSE = new MouseInputHandler();
-    public final KeyInputHandler KEYBOARD = new KeyInputHandler();
+    private final MouseInputHandler MOUSE = new MouseInputHandler();
+    private final KeyInputHandler KEYBOARD = new KeyInputHandler();
 
-    public boolean isGameRunning;
-    public int balance = 10000;
+    private boolean isRunning;
+    private int balance = 500;
 
-    public int width = 800;
-    public int height = 600;
-    public final int MAPOFFSET = 30;
+    private int width = 800;
+    private int height = 600;
+
+    public int getWidth() {
+        return width;
+    }
+
+    public int getHeight() {
+        return height;
+    }
+    public final int MAPOFFSETX = 54;
+    public final int MAPOFFSETY = 23;
     public final int PAINTMARGIN = 10;
     private final int WIDTHCORRECTION = -10;
     private final int HEIGHTCORRECTION = -10;
@@ -64,6 +88,7 @@ public class GameForm extends Canvas {
     private final int TARGET_FPS = 60;
     private int fps;
     private final long TARGET_NSPF = NSPS / TARGET_FPS;
+    private double currentTime;
 
     public final int TILEWIDTH = 30;
 
@@ -97,34 +122,93 @@ public class GameForm extends Canvas {
         BUFFER_STRATEGY = getBufferStrategy();
     }
 
+    public boolean isGameRunning() {
+        return isRunning;
+    }
+
+    public int getBalance() {
+        return balance;
+    }
+
+    public void setBalance(int bal) {
+        balance = bal;
+    }
+
+    public ListOf<Enemy> getEnemies() {
+        return listEnemies;
+    }
+
+    public ListOf<Tower> getTowers() {
+        return listTowers;
+    }
+
+    public ListOf<Bullet> getBullets() {
+        return listBullets;
+    }
+
+    public GameMap getMap() {
+        return currentMap;
+    }
+
     private void resize() {
-        PANEL.setPreferredSize(new Dimension(width + WIDTHCORRECTION, height
-                + HEIGHTCORRECTION));
+        PANEL.setPreferredSize(new Dimension(width, height + PAINTMARGIN));
         PANEL.setLayout(null);
-        setBounds(0, 0, width, height);
+        setBounds(0, PAINTMARGIN, width, height);
         FRAME.pack();
     }
 
     @Override
-    public void paint(Graphics g) {
-        g.translate(PAINTMARGIN, PAINTMARGIN);
-        Graphics2D g2 = (Graphics2D) g;
+    public void paint(Graphics gObj) {
+        Graphics2D g = (Graphics2D) gObj;
         if (currentMap == null) {
             return;
         }
-        currentMap.paint(g2);
-        listEnemies.forEach(e -> e.paint(g2));
-        listTowers.forEach(t -> t.paint(g2));
-        listBullets.forEach(b -> b.paint(g2));
-        g.translate(-PAINTMARGIN, -PAINTMARGIN);
+
+        //Translate to th eupper left corner of the map.
+        g.translate(MAPOFFSETX, MAPOFFSETY);
+
+        //Paint the GameObjects in a adequate order.
+        currentMap.paint(g);
+        listEnemies.forEach(e -> e.paint(g));
+        listTowers.forEach(t -> t.paint(g));
+        listBullets.forEach(b -> b.paint(g));
+
+        //Translate back to the upper left corner of the canvas...
+        g.translate(-MAPOFFSETX, -MAPOFFSETY);
+
+        //...and draw a crosshair.
         g.setColor(colGainsboro);
-        g.translate(MOUSE.XMouse, MOUSE.YMouse);
-        g.drawLine(-PAINTMARGIN, 0, PAINTMARGIN, 0);
-        g.drawLine(0, -PAINTMARGIN, 0, PAINTMARGIN);
-        g.translate(-MOUSE.XMouse, -MOUSE.YMouse);
+        g.translate(MOUSE.xMouse, MOUSE.yMouse);
+        g.drawLine(-10, 0, 10, 0);
+        g.drawLine(0, -10, 0, 10);
+        g.translate(-MOUSE.xMouse, -MOUSE.yMouse);
+
+        //Now print some data.
+        g.setFont(new Font("Consolas", 0, 15));
+        g.drawString("TIME: " + String.format("%.2f", currentTime), 5, 20);
+        g.drawString("BALANCE: " + balance, 5, 50);
+        Point p = MOUSE.getPoint();
+        g.drawString("POS: " + p.x + ", " + p.y, 5, 70);
+        g.drawString("MAP POS: " + (p.x - MAPOFFSETX) + ", "
+                + (p.y - MAPOFFSETY), 5, 100);
+        p = currentMap.getMapCoordinate(p);
+        g.drawString("POS: " + p.x + ", " + p.y, 5, 130);
     }
 
     public void update(double deltatime, double abstime) {
+        if (MOUSE.getLeftButton()) {
+            Point posClicked = MOUSE.getPoint();
+            Rectangle mapArea = currentMap.getRectangle();
+            if (mapArea.contains(posClicked)) {
+                Tower newTower = new NormalTower(this);
+                buildManager.tryPlaceTower(newTower, posClicked);
+            }
+        }
+        if (KEYBOARD.isSpacePressed()) {
+            Enemy en = new NormalEnemy(this);
+            currentMap.sendEnemy(en);
+            listEnemies.add(en);
+        }
         currentMap.update(deltatime, abstime);
         buildManager.update(deltatime, abstime);
         listEnemies.forEach(e -> e.update(deltatime, abstime));
@@ -134,7 +218,7 @@ public class GameForm extends Canvas {
 
     public void startGame() {
         if (loadMap("Map1.csv")) {
-            isGameRunning = true;
+            isRunning = true;
             doGameLoop();
         }
     }
@@ -142,12 +226,12 @@ public class GameForm extends Canvas {
     public boolean loadMap(String csv) {
         String path = GameForm.class.getProtectionDomain().getCodeSource().
                 getLocation().getPath();
-        currentMap = Map.load(new File(path + csv), this);
+        currentMap = GameMap.load(new File(path + csv), this);
         if (currentMap == null) {
             return false;
         }
-        width = currentMap.getWidth() + MAPOFFSET;
-        height = currentMap.getHeight() + MAPOFFSET;
+        width = currentMap.getWidth() + MAPOFFSETX + 10;
+        height = currentMap.getHeight() + MAPOFFSETY + 10;
         resize();
         return true;
     }
@@ -156,11 +240,11 @@ public class GameForm extends Canvas {
         long nanoSecPerSec = 0;
         long absLastFrameBegin = System.nanoTime();
         boolean isFirstRun = true;
-        double absTime = 0d;
-        while (isGameRunning) {
+        currentTime = 0d;
+        while (isRunning) {
             long absFrameBegin = System.nanoTime();
             long lastFrameDuration = absFrameBegin - absLastFrameBegin;
-            double deltaSec = (double) lastFrameDuration / TARGET_FPS / NSPS;
+            double deltaSec = (double) lastFrameDuration / NSPS;
             nanoSecPerSec += lastFrameDuration;
             fps++;
             if (nanoSecPerSec >= NSPS) {
@@ -170,24 +254,21 @@ public class GameForm extends Canvas {
             }
 
             if (!isFirstRun) {
-                //TODO: Fix MOUSE inputs.
-                if (MOUSE.Button != 0) {
-                    System.out.println(MOUSE.Button);
-                }
-                if (MOUSE.Button == MouseEvent.BUTTON1) {
-                    Point posClicked = MOUSE.getPoint();
-                    Rectangle mapArea = currentMap.getRectangle();
-                    if (mapArea.contains(posClicked)) {
-                        buildManager.placeTower(new NormalTower(this), posClicked);
-                    }
-                }
-                update(deltaSec, absTime);
+                update(deltaSec, currentTime);
                 Graphics2D g = (Graphics2D) BUFFER_STRATEGY.getDrawGraphics();
+                HashMap antiAlias = new HashMap(3);
+                antiAlias.put(RenderingHints.KEY_ANTIALIASING,
+                        RenderingHints.VALUE_ANTIALIAS_ON);
+                antiAlias.put(RenderingHints.KEY_TEXT_ANTIALIASING,
+                        RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+                antiAlias.put(RenderingHints.KEY_RENDERING,
+                        RenderingHints.VALUE_RENDER_QUALITY);
+                g.addRenderingHints(antiAlias);
                 g.setColor(colBackground);
                 g.fillRect(0, 0, width, height);
                 paint(g);
                 BUFFER_STRATEGY.show();
-                absTime += deltaSec;
+                currentTime += deltaSec;
             }
 
             long absNow = System.nanoTime();
@@ -219,7 +300,15 @@ public class GameForm extends Canvas {
      */
     private class KeyInputHandler extends KeyAdapter {
 
-        public KeyEvent typedKey;
+        private boolean isSpace;
+
+        public boolean isSpacePressed() {
+            if (isSpace) {
+                isSpace = false;
+                return true;
+            }
+            return false;
+        }
 
         /**
          * Notification from AWT that a key has been typed. Note that typing a
@@ -229,42 +318,67 @@ public class GameForm extends Canvas {
          */
         @Override
         public void keyTyped(KeyEvent e) {
-            typedKey = e;
-            if (e.getKeyChar() == KeyEvent.VK_ESCAPE) {
-                System.exit(0);
+            switch (e.getKeyChar()) {
+                case KeyEvent.VK_SPACE:
+                    isSpace = true;
+                    return;
+                case KeyEvent.VK_ESCAPE:
+                    System.exit(0);
             }
         }
     }
 
     private class MouseInputHandler extends MouseAdapter {
 
-        public int XMouse;
-        public int YMouse;
-        public int Button;
+        private int xMouse;
+        private int yMouse;
+        private boolean isLeftPressed;
+        private boolean isRightPressed;
+
+        public int getX() {
+            return xMouse;
+        }
+
+        public int getY() {
+            return yMouse;
+        }
+
+        public boolean getLeftButton() {
+            if (isLeftPressed) {
+                isLeftPressed = false;
+                return true;
+            }
+            return false;
+        }
+
+        public boolean getRightButton() {
+            if (isRightPressed) {
+                isRightPressed = false;
+                return true;
+            }
+            return false;
+        }
 
         public Point getPoint() {
-            return new Point(XMouse, YMouse);
-        }
-
-        @Override
-        public void mousePressed(MouseEvent e) {
-            Button = e.getButton();
-        }
-
-        @Override
-        public void mouseReleased(MouseEvent e) {
-            Button = e.getButton();
+            return new Point(xMouse, yMouse);
         }
 
         @Override
         public void mouseClicked(MouseEvent e) {
-            Button = e.getButton();
+            switch (e.getButton()) {
+                case MouseEvent.BUTTON1:
+                    isLeftPressed = true;
+                    return;
+                case MouseEvent.BUTTON3:
+                    isRightPressed = true;
+                    return;
+            }
         }
 
         @Override
         public void mouseMoved(MouseEvent e) {
-            XMouse = e.getX();
-            YMouse = e.getY();
+            xMouse = e.getX();
+            yMouse = e.getY();
         }
     }
 }

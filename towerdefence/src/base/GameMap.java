@@ -25,9 +25,9 @@ import java.nio.file.*;
  *
  * @author raphael
  */
-public final class Map extends DrawableObject {
+public final class GameMap extends DrawableObject {
 
-    public static Map load(File csv, GameForm game) {
+    public static GameMap load(File csv, GameForm game) {
         if (!csv.exists()) {
             return null;
         }
@@ -39,7 +39,7 @@ public final class Map extends DrawableObject {
         } catch (Exception ex) {
             return null;
         }
-        Map newMap = new Map(game);
+        GameMap newMap = new GameMap(game);
         String[] lines = content.split("(?!0)(\\r|)\\n");
         String[] characters = lines[0].split(";|\\r");
         String test = String.join(";", lines);
@@ -55,6 +55,9 @@ public final class Map extends DrawableObject {
                     return null;
                 }
                 newMap.data[i][j] = MapData.parse(Integer.parseInt(character));
+                if (newMap.data[i][j] == MapData.START) {
+                    newMap.startPoint = new Point(j, i);
+                }
                 j++;
             }
             if (j == characters.length - 1) {
@@ -65,8 +68,9 @@ public final class Map extends DrawableObject {
         return newMap;
     }
     private MapData[][] data;
+    private Point startPoint;
 
-    private Map(GameForm game) {
+    private GameMap(GameForm game) {
         super(game);
     }
 
@@ -78,11 +82,25 @@ public final class Map extends DrawableObject {
         return Game.TILEWIDTH * data.length;
     }
 
-    public Point calcPosition(Point p) {
-        int x = (p.x + Game.MAPOFFSET / 2) / Game.TILEWIDTH;
-        int y = (p.y + Game.MAPOFFSET / 2) / Game.TILEWIDTH;
-        return new Point(x * Game.TILEWIDTH + Game.TILEWIDTH / 2,
-                y * Game.TILEWIDTH + Game.TILEWIDTH / 2);
+    public Point transformToMapCenter(Point p) {
+        Point coordinate = getMapCoordinate(p);
+        return new Point(coordinate.x * Game.TILEWIDTH + Game.TILEWIDTH / 2,
+                coordinate.y * Game.TILEWIDTH + Game.TILEWIDTH / 2);
+    }
+
+    public Point getMapCoordinate(Point p) {
+        int x = (p.x - Game.MAPOFFSETX) / Game.TILEWIDTH;
+        int y = (p.y - Game.MAPOFFSETY) / Game.TILEWIDTH;
+        return new Point(x, y);
+    }
+
+    public boolean canPlaceTower(Point mapCoordinate) {
+        return data[mapCoordinate.y][mapCoordinate.x] == MapData.TOWER;
+    }
+
+    public void sendEnemy(Enemy e) {
+        e.center = new Point(startPoint.x * Game.TILEWIDTH + Game.TILEWIDTH / 2,
+                startPoint.y * Game.TILEWIDTH + Game.TILEWIDTH / 2);
     }
 
     @Override
@@ -107,8 +125,24 @@ public final class Map extends DrawableObject {
     }
 
     public Rectangle getRectangle() {
-        return new Rectangle(Game.PAINTMARGIN, Game.PAINTMARGIN, Game.width,
-                Game.height);
+        return new Rectangle(Game.MAPOFFSETX, Game.MAPOFFSETY,
+                Game.getWidth(), Game.getHeight());
+    }
+
+    public Point calcNewPoint(Enemy e, Point oldPoint) {
+        int maxX = data.length;
+        int maxY = data[0].length;
+        switch (e.facingAngle) {
+            case 0:
+                if (data[oldPoint.x][oldPoint.y + 1].isWalkable()) {
+                    return new Point(oldPoint.y + 1, oldPoint.x);
+                }
+            case 1:
+                if (data[oldPoint.y][oldPoint.x].isWalkable()) {
+                    return new Point(oldPoint.y, oldPoint.x - 1);
+                }
+        }
+        return new Point(maxX, maxY);
     }
 
     private enum MapData {
@@ -156,6 +190,10 @@ public final class Map extends DrawableObject {
                     g.fillRect(x, y, width, width);
                     return;
             }
+        }
+
+        public boolean isWalkable() {
+            return data == 1 || data == 2;
         }
     }
 }

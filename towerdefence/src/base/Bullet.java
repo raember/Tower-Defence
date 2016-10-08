@@ -35,7 +35,7 @@ public abstract class Bullet extends DrawableObject {
 
     @Override
     public void update(double deltatime, double abstime) {
-        for (Enemy tempEnemy : Game.listEnemies.where(e
+        for (Enemy tempEnemy : Game.getEnemies().where(e
                 -> e.center.distance(center)
                 <= rangeOfImpact + e.radiusOfVulnerability)) {
             damageEnemy(tempEnemy);
@@ -48,6 +48,6 @@ public abstract class Bullet extends DrawableObject {
     }
 
     protected void destroy() {
-        Game.listBullets.remove(this);
+        Game.getBullets().remove(this);
     }
 }

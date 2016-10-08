@@ -32,12 +32,19 @@ public class BuildingManager extends GameObject {
     public void update(double deltatime, double abstime) {
     }
 
-    public void placeTower(Tower tower, Point at) {
-        if (Game.balance >= tower.cost) {
-            Game.balance -= tower.cost;
-            tower.center = Game.currentMap.calcPosition(at);
-            Game.listTowers.add(tower);
+    public void tryPlaceTower(Tower tower, Point center) {
+        int bal = Game.getBalance();
+        GameMap theMap = Game.getMap();
+        tower.center = theMap.transformToMapCenter(center);
+        if (bal >= tower.cost
+                && theMap.canPlaceTower(theMap.getMapCoordinate(center))) {
+            Game.setBalance(bal - tower.cost);
+            Game.getTowers().add(tower);
         }
+    }
+
+    public void upgradeTower(Point center) {
+
     }
 
 }

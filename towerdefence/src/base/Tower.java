@@ -48,7 +48,7 @@ public abstract class Tower extends DrawableObject {
     protected void handleEnemies() {
         ListOf<Enemy> nearestEnemies = findNearestEnemies(center, range);
         if (!nearestEnemies.any()) {
-            angularSpeed = 0d;
+            //angularSpeed = 0d;
             return;
         }
         if (lastEnemy == null || !nearestEnemies.contains(lastEnemy)) {
@@ -64,7 +64,7 @@ public abstract class Tower extends DrawableObject {
     protected ListOf<Enemy> findNearestEnemies(Point from, double range) {
         ListOf<Enemy> nearestEnemy = new ListOf();
         double distance = range;
-        for (Enemy e : Game.listEnemies) {
+        for (Enemy e : Game.getEnemies()) {
             double tempDistance = from.distance(e.center);
             if (!nearestEnemy.any() || tempDistance < distance) {
                 nearestEnemy.add(e);
@@ -82,8 +82,8 @@ public abstract class Tower extends DrawableObject {
                 <= Double.MIN_NORMAL;
     }
 
+    //FIXME: Fix detection of direction for angular movement.
     protected double face(Point p) {
-        //FIXME: Fix detection of direction for angular movement.
         double desiredAngle = Math.atan2(p.y - center.y, p.x - center.x);
         if (Math.abs(desiredAngle - facingAngle) < Math.PI) {
             return maxAngularSpeed;
@@ -96,15 +96,20 @@ public abstract class Tower extends DrawableObject {
         Bullet tempBullet = createBullet();
         tempBullet.center = center;
         tempBullet.facingangle = facingAngle;
-        Game.listBullets.add(tempBullet);
+        Game.getBullets().add(tempBullet);
     }
 
     @Override
     public void update(double deltatime, double abstime) {
+        if (Math.abs(desiredAngle - facingAngle) > Double.MIN_NORMAL) {
+            angularSpeed = maxAngularSpeed;
+        }
         double deltaAngle = deltatime * angularSpeed;
         if (Math.abs(desiredAngle - facingAngle) <= deltaAngle) {
             facingAngle = desiredAngle;
             angularSpeed = 0d;
+        } else {
+            facingAngle += deltaAngle;
         }
         if (health <= 0) {
             destroy();
@@ -117,9 +122,9 @@ public abstract class Tower extends DrawableObject {
         int width = Game.TILEWIDTH;
         g.translate(center.x, center.y);
         paintBase(g, width);
-        g.rotate(facingAngle, center.x, center.y);
+        g.rotate(-facingAngle, 0, 0);
         paintHead(g, width);
-        g.rotate(-facingAngle, center.x, center.y);
+        g.rotate(facingAngle, 0, 0);
         g.translate(-center.x, -center.y);
     }
 
@@ -137,7 +142,7 @@ public abstract class Tower extends DrawableObject {
     protected abstract void paintHead(Graphics2D g, int width);
 
     protected void destroy() {
-        Game.listTowers.remove(this);
+        Game.getTowers().remove(this);
     }
 
     public abstract boolean levelUp();
