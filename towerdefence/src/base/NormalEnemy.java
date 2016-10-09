@@ -29,15 +29,13 @@ public class NormalEnemy extends Enemy {
         super(game);
         radiusOfVulnerability = 6d;
         health = 50;
-        facingAngle = 0;
-        speed = 3d;
+        facingAngle = 2;
+        speed = 100d;
     }
 
     @Override
-    public void paint(Graphics2D g) {
-        g.translate(center.x, center.y);
+    protected void paintEnemy(Graphics2D g) {
         int width = Game.TILEWIDTH;
-        g.rotate(-facingAngle);
         g.setColor(colInterior);
         int[] xpoints = new int[4];
         xpoints[0] = -width / 6;
@@ -54,7 +52,6 @@ public class NormalEnemy extends Enemy {
         g.setStroke(new BasicStroke(3));
         g.drawPolygon(xpoints, ypoints, 4);
         g.setStroke(new BasicStroke(1));
-        g.rotate(facingAngle);
-        g.translate(-center.x, -center.y);
     }
+
 }

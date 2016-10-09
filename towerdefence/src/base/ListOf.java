@@ -71,7 +71,8 @@ public class ListOf<T>
         return this.aggregate(func, null);
     }
 
-    public T aggregate(BiFunction<? super T, ? super T, ? extends T> func, T seed) {
+    public T aggregate(BiFunction<? super T, ? super T, ? extends T> func,
+            T seed) {
         T Aggregate = seed;
         for (T itm : this) {
             Aggregate = func.apply(Aggregate, itm);
@@ -166,8 +167,10 @@ public class ListOf<T>
      *         item or, if there is no larger element, the bitwise complement of
      *         Count.
      */
-    public int binarySearch(int index, int count, T item, Comparator<? super T> comparer) {
-        return index + 1 + Collections.binarySearch(this.getRange(index, count), item, comparer);
+    public int binarySearch(int index, int count, T item,
+            Comparator<? super T> comparer) {
+        return index + 1 + Collections.binarySearch(this.getRange(index, count),
+                item, comparer);
     }
 
     public <U> ListOf<U> cast() {
@@ -441,7 +444,8 @@ public class ListOf<T>
      * @return The zero-based index of the last occurrence of an element that
      *         matches the conditions defined by match, if found; otherwise, –1.
      */
-    public int findLastIndex(int startindex, int count, Predicate<? super T> match) {
+    public int findLastIndex(int startindex, int count,
+            Predicate<? super T> match) {
         int findLastIndex = -1;
         for (int i = startindex; i < startindex + count; i++) {
             if (match.test(this.get(i))) {
@@ -463,7 +467,8 @@ public class ListOf<T>
      *         matches the conditions defined by match, if found; otherwise, –1.
      */
     public int findLastIndex(int startindex, Predicate<? super T> match) {
-        return this.findLastIndex(startindex, this.size() - startindex - 1, match);
+        return this.findLastIndex(startindex, this.size() - startindex - 1,
+                match);
     }
 
     /**
@@ -521,8 +526,10 @@ public class ListOf<T>
         return this.subList(index, index + count - 1);
     }
 
-    public <TKey> HashMap<TKey, T> groupBy(Function<? super T, ? extends TKey> func) {
-        return (HashMap<TKey, T>) this.stream().collect(Collectors.groupingBy(i -> func.apply(i)));
+    public <TKey> HashMap<TKey, T> groupBy(
+            Function<? super T, ? extends TKey> func) {
+        return (HashMap<TKey, T>) this.stream().collect(Collectors.groupingBy(i
+                -> func.apply(i)));
     }
 
     /**
@@ -574,10 +581,10 @@ public class ListOf<T>
         ListOf<T> intersect = new ListOf();
         this.forEachElement((T itm)
                 -> {
-                    if (list.contains(itm)) {
-                        intersect.add(itm);
-                    }
-                });
+            if (list.contains(itm)) {
+                intersect.add(itm);
+            }
+        });
         return intersect;
     }
 
@@ -677,9 +684,10 @@ public class ListOf<T>
      */
     public int removeAllWhere(Predicate<? super T> match) {
         int removeAllWhere = 0;
-        for (T itm : this) {
-            if (match.test(itm)) {
-                this.remove(itm);
+        Iterator<T> it = this.iterator();
+        while (it.hasNext()) {
+            if (match.test(it.next())) {
+                it.remove();
                 removeAllWhere++;
             }
         }
@@ -728,7 +736,8 @@ public class ListOf<T>
         return this;
     }
 
-    public <TResult> ListOf<TResult> select(Function<? super T, ? extends TResult> func) {
+    public <TResult> ListOf<TResult> select(
+            Function<? super T, ? extends TResult> func) {
         ListOf<TResult> select = new ListOf<>();
         this.stream().forEach((itm) -> {
             select.add(func.apply(itm));
@@ -736,7 +745,8 @@ public class ListOf<T>
         return select;
     }
 
-    public <TResult> ListOf<TResult> select(BiFunction<? super T, Integer, ? extends TResult> func) {
+    public <TResult> ListOf<TResult> select(
+            BiFunction<? super T, Integer, ? extends TResult> func) {
         ListOf<TResult> select = new ListOf<>();
         for (int i = 0; i < this.size(); i++) {
             select.add(func.apply(this.get(i), i));
@@ -744,7 +754,8 @@ public class ListOf<T>
         return select;
     }
 
-    public <TResult> ListOf<TResult> selectMany(Function<? super T, ? extends ListOf<TResult>> func) {
+    public <TResult> ListOf<TResult> selectMany(
+            Function<? super T, ? extends ListOf<TResult>> func) {
         ListOf<TResult> select = new ListOf<>();
         for (int i = 0; i < this.size(); i++) {
             select.addRange(func.apply(this.get(i)));
@@ -813,7 +824,8 @@ public class ListOf<T>
      *                   Comparer<T>.Default.
      * @return The alteres ListOf<T>.
      */
-    public ListOf<T> sort(int startarray, int count, Comparator<? super T> comparer) {
+    public ListOf<T> sort(int startarray, int count,
+            Comparator<? super T> comparer) {
         ListOf<T> sortList = this.removeRangeIn(startarray, count);
         Collections.sort(sortList, comparer);
         for (T itm : sortList.reverse()) {

@@ -189,19 +189,20 @@ public class GameForm extends Canvas {
         g.drawString("BALANCE: " + balance, 5, 50);
         Point p = MOUSE.getPoint();
         g.drawString("POS: " + p.x + ", " + p.y, 5, 70);
-        g.drawString("MAP POS: " + (p.x - MAPOFFSETX) + ", "
-                + (p.y - MAPOFFSETY), 5, 100);
-        p = currentMap.getMapCoordinate(p);
+        Point p2 = currentMap.translateFromAbsToMap(p);
+        g.drawString("MAP POS: " + p2.x + ", "
+                + p2.y, 5, 100);
+        p = currentMap.transformFromScreenToMap(p2);
         g.drawString("POS: " + p.x + ", " + p.y, 5, 130);
     }
 
     public void update(double deltatime, double abstime) {
         if (MOUSE.getLeftButton()) {
-            Point posClicked = MOUSE.getPoint();
+            Point pos = currentMap.translateFromAbsToMap(MOUSE.getPoint());
             Rectangle mapArea = currentMap.getRectangle();
-            if (mapArea.contains(posClicked)) {
+            if (mapArea.contains(pos)) {
                 Tower newTower = new NormalTower(this);
-                buildManager.tryPlaceTower(newTower, posClicked);
+                buildManager.tryPlaceTower(newTower, pos);
             }
         }
         if (KEYBOARD.isSpacePressed()) {

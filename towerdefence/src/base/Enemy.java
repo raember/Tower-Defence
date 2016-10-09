@@ -16,8 +16,8 @@
  */
 package base;
 
-import java.awt.Color;
-import java.awt.Point;
+import java.awt.*;
+import java.awt.geom.*;
 
 /**
  * @author Raphael
@@ -33,6 +33,7 @@ public abstract class Enemy extends DrawableObject {
     protected final Color colBorder = new Color(250, 80, 40);
     private Point oldPoint;
     private Point newPoint;
+    private double pos;
 
     public Enemy(GameForm game) {
         super(game);
@@ -41,10 +42,57 @@ public abstract class Enemy extends DrawableObject {
     @Override
     public void update(double deltatime, double abstime) {
         GameMap theMap = Game.getMap();
+        pos += deltatime * speed;
+        boolean firstRun = false;
         if (oldPoint == null) {
-            oldPoint = theMap.getMapCoordinate(center);
-            newPoint = theMap.calcNewPoint(this, oldPoint);
+            //first run
+            oldPoint = center;
+            newPoint = oldPoint;
+            firstRun = true;
+        }
+        if (pos >= Game.TILEWIDTH || firstRun) {
+            //new point reached or first run
+            firstRun = false;
+            oldPoint = newPoint;
+            newPoint = theMap.transformFromMapCoordinateToMapCenter(
+                    theMap.calcNewPoint(this, 
+                            theMap.transformFromScreenToMap(oldPoint)));
+            pos = pos % Game.TILEWIDTH;
+            if (oldPoint.x < newPoint.x) {
+                facingAngle = 0;
+            } else if (oldPoint.y < newPoint.y) {
+                facingAngle = 1;
+            } else if (oldPoint.x > newPoint.x) {
+                facingAngle = 2;
+            } else if (oldPoint.y > newPoint.y) {
+                facingAngle = 3;
+            }
+        }
+        center = (Point) oldPoint.clone();
+        switch (facingAngle) {
+            case 0:
+                center.translate((int) pos, 0);
+                break;
+            case 1:
+                center.translate(0, (int) -pos);
+                break;
+            case 2:
+                center.translate((int) -pos, 0);
+                break;
+            case 3:
+                center.translate(0, (int) pos);
+                break;
         }
     }
 
+    @Override
+    public void paint(Graphics2D g) {
+        g.translate(center.x, center.y);
+        g.rotate(-facingAngle / 2 * Math.PI);
+        paintEnemy(g);
+        g.rotate(facingAngle / 2 * Math.PI);
+        g.translate(-center.x, -center.y);
+    }
+
+    protected abstract void paintEnemy(Graphics2D g);
 }

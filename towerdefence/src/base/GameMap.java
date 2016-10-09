@@ -20,6 +20,7 @@ import java.awt.*;
 import java.io.File;
 import java.nio.charset.Charset;
 import java.nio.file.*;
+import java.util.Random;
 
 /**
  *
@@ -82,16 +83,25 @@ public final class GameMap extends DrawableObject {
         return Game.TILEWIDTH * data.length;
     }
 
-    public Point transformToMapCenter(Point p) {
-        Point coordinate = getMapCoordinate(p);
-        return new Point(coordinate.x * Game.TILEWIDTH + Game.TILEWIDTH / 2,
-                coordinate.y * Game.TILEWIDTH + Game.TILEWIDTH / 2);
+    public Point transformFromScreenToMap(Point p) {
+        return new Point(p.x / Game.TILEWIDTH, p.y / Game.TILEWIDTH);
     }
 
-    public Point getMapCoordinate(Point p) {
-        int x = (p.x - Game.MAPOFFSETX) / Game.TILEWIDTH;
-        int y = (p.y - Game.MAPOFFSETY) / Game.TILEWIDTH;
-        return new Point(x, y);
+    public Point transformFromMapCoordinateToMapCenter(Point p) {
+        return new Point(p.x * Game.TILEWIDTH + Game.TILEWIDTH / 2,
+                p.y * Game.TILEWIDTH + Game.TILEWIDTH / 2);
+    }
+
+    public Point translateFromMapToAbs(Point p) {
+        Point temp = (Point) p.clone();
+        temp.translate(Game.MAPOFFSETX, Game.MAPOFFSETY);
+        return temp;
+    }
+
+    public Point translateFromAbsToMap(Point p) {
+        Point temp = (Point) p.clone();
+        temp.translate(-Game.MAPOFFSETX, -Game.MAPOFFSETY);
+        return temp;
     }
 
     public boolean canPlaceTower(Point mapCoordinate) {
@@ -130,19 +140,45 @@ public final class GameMap extends DrawableObject {
     }
 
     public Point calcNewPoint(Enemy e, Point oldPoint) {
-        int maxX = data.length;
-        int maxY = data[0].length;
+        int maxX = data[0].length - 1;
+        int maxY = data.length - 1;
+        Point newPoint = null;
+        ListOf<Point> possiblePoints = new ListOf<>();
+        for (int i = Math.max(0, oldPoint.x - 1);
+                i <= Math.min(maxX, oldPoint.x + 1);
+                i++) {
+            for (int j = Math.max(0, oldPoint.y - 1);
+                    j <= Math.min(maxY, oldPoint.y + 1);
+                    j++) {
+                if ((i != oldPoint.x || j != oldPoint.y)
+                        && Math.abs(i - oldPoint.x) != Math.abs(j - oldPoint.y)) {
+                    if (data[j][i].isWalkable()) {
+                        possiblePoints.add(new Point(i, j));
+                    }
+                }
+            }
+        }
         switch (e.facingAngle) {
             case 0:
-                if (data[oldPoint.x][oldPoint.y + 1].isWalkable()) {
-                    return new Point(oldPoint.y + 1, oldPoint.x);
-                }
+                possiblePoints.removeAllWhere(p -> p.x < oldPoint.x);
+                break;
             case 1:
-                if (data[oldPoint.y][oldPoint.x].isWalkable()) {
-                    return new Point(oldPoint.y, oldPoint.x - 1);
-                }
+                possiblePoints.removeAllWhere(p -> p.y > oldPoint.y);
+                break;
+            case 2:
+                possiblePoints.removeAllWhere(p -> p.x > oldPoint.x);
+                break;
+            case 3:
+                possiblePoints.removeAllWhere(p -> p.y < oldPoint.y);
+                break;
         }
-        return new Point(maxX, maxY);
+        if (possiblePoints.size() > 1) {
+            Random r = new Random();
+            newPoint = possiblePoints.get(r.nextInt(possiblePoints.size()));
+        } else {
+            newPoint = possiblePoints.first();
+        }
+        return newPoint;
     }
 
     private enum MapData {
