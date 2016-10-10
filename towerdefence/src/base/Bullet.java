@@ -16,6 +16,7 @@
  */
 package base;
 
+import java.awt.Graphics2D;
 import java.awt.Point;
 
 /**
@@ -26,8 +27,9 @@ public abstract class Bullet extends DrawableObject {
 
     public double rangeOfImpact;
     public int damage;
-    public double facingangle;
+    public double facingAngle;
     public double speed;
+    private double pos = 0d;
 
     public Bullet(GameForm Game) {
         super(Game);
@@ -35,13 +37,24 @@ public abstract class Bullet extends DrawableObject {
 
     @Override
     public void update(double deltatime, double abstime) {
+        double tan = Math.tan(this.facingAngle);
+        double delta = deltatime * speed;
+        center.translate((int) (delta * tan), (int) (delta - tan));
         for (Enemy tempEnemy : Game.getEnemies().where(e
                 -> e.center.distance(center)
                 <= rangeOfImpact + e.radiusOfVulnerability)) {
             damageEnemy(tempEnemy);
-
         }
     }
+
+    @Override
+    public void paint(Graphics2D g) {
+        g.translate(-center.x, -center.y);
+        paintBullet(g);
+        g.translate(center.x, center.y);
+    }
+
+    protected abstract void paintBullet(Graphics2D g);
 
     protected void damageEnemy(Enemy enemy) {
         enemy.health -= damage;

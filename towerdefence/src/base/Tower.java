@@ -55,7 +55,7 @@ public abstract class Tower extends DrawableObject {
             lastEnemy = nearestEnemies.first();
         }
         if (isFacing(lastEnemy.center)) {
-//            shootEnemy(lastEnemy);
+            shootEnemy(lastEnemy);
         } else {
             angularSpeed = face(lastEnemy.center);
         }
@@ -83,30 +83,31 @@ public abstract class Tower extends DrawableObject {
     }
 
     protected double face(Point p) {
-        double desiredAngle = Math.atan2(center.y - p.y, p.x - center.x);
+        desiredAngle = Math.atan2(center.y - p.y, p.x - center.x);
         return Math.signum(desiredAngle - facingAngle) * maxAngularSpeed;
     }
 
     protected void shootEnemy(Enemy enemy) {
         Bullet tempBullet = createBullet();
         tempBullet.center = center;
-        tempBullet.facingangle = facingAngle;
+        tempBullet.facingAngle = facingAngle;
         Game.getBullets().add(tempBullet);
     }
 
     @Override
     public void update(double deltatime, double abstime) {
-        if (Math.abs(desiredAngle - facingAngle) > Double.MIN_NORMAL) {
-            angularSpeed = maxAngularSpeed;
-        }
         double deltaAngle = deltatime * angularSpeed;
-        if (Math.abs(desiredAngle - facingAngle) <= deltaAngle) {
-            facingAngle = desiredAngle;
+        double desiredA = desiredAngle;
+        if (desiredAngle < 0) {
+            desiredA += 2 * Math.PI;
+        }
+        if (Math.abs(desiredA - facingAngle) <= deltaAngle) {
+            facingAngle = desiredA;
             angularSpeed = 0d;
-            System.out.println(desiredAngle);
         } else {
             facingAngle += deltaAngle;
         }
+        System.out.println(desiredA);
         if (health <= 0) {
             destroy();
         }
