@@ -29,8 +29,8 @@ public class NormalEnemy extends Enemy {
         super(game);
         radiusOfVulnerability = 6d;
         health = 50;
-        facingAngle = 2;
-        speed = 100d;
+        facingAngle = Direction.NORTH;
+        speed = 300d;
     }
 
     @Override

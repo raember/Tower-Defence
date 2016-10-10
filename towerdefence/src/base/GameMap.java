@@ -139,11 +139,18 @@ public final class GameMap extends DrawableObject {
                 Game.getWidth(), Game.getHeight());
     }
 
+    public MapData getTile(Point mapcoordinate) {
+        return data[mapcoordinate.y][mapcoordinate.x];
+    }
+
     public Point calcNewPoint(Enemy e, Point oldPoint) {
         int maxX = data[0].length - 1;
         int maxY = data.length - 1;
         Point newPoint = null;
         ListOf<Point> possiblePoints = new ListOf<>();
+        if (oldPoint.y == 18 && oldPoint.x == 3) {
+            int i = 0;
+        }
         for (int i = Math.max(0, oldPoint.x - 1);
                 i <= Math.min(maxX, oldPoint.x + 1);
                 i++) {
@@ -159,18 +166,17 @@ public final class GameMap extends DrawableObject {
             }
         }
         switch (e.facingAngle) {
-            case 0:
+            case EAST:
                 possiblePoints.removeAllWhere(p -> p.x < oldPoint.x);
                 break;
-            case 1:
+            case NORTH:
                 possiblePoints.removeAllWhere(p -> p.y > oldPoint.y);
                 break;
-            case 2:
+            case WEST:
                 possiblePoints.removeAllWhere(p -> p.x > oldPoint.x);
                 break;
-            case 3:
+            case SOUTH:
                 possiblePoints.removeAllWhere(p -> p.y < oldPoint.y);
-                break;
         }
         if (possiblePoints.size() > 1) {
             Random r = new Random();
@@ -179,57 +185,5 @@ public final class GameMap extends DrawableObject {
             newPoint = possiblePoints.first();
         }
         return newPoint;
-    }
-
-    private enum MapData {
-
-        WALL(0),
-        PATH(1),
-        START(2),
-        END(3),
-        TOWER(4);
-
-        private int data;
-
-        private MapData(int data) {
-            this.data = data;
-        }
-
-        public static MapData parse(int data) {
-            for (MapData md : MapData.values()) {
-                if (md.data == data) {
-                    return md;
-                }
-            }
-            return null;
-        }
-
-        public void paint(Graphics2D g, GameForm game, int x, int y, int width) {
-            switch (this) {
-                case WALL:
-                    g.setColor(game.colWallTile);
-                    g.fillRect(x, y, width, width);
-                    return;
-                case PATH:
-                    //The Path-color remains the same as the background.
-                    return;
-                case START:
-                    g.setColor(game.colStartTile);
-                    g.fillRect(x, y, width, width);
-                    return;
-                case END:
-                    g.setColor(game.colEndTile);
-                    g.fillRect(x, y, width, width);
-                    return;
-                case TOWER:
-                    g.setColor(game.colTowerTile);
-                    g.fillRect(x, y, width, width);
-                    return;
-            }
-        }
-
-        public boolean isWalkable() {
-            return data == 1 || data == 2;
-        }
     }
 }

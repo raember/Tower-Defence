@@ -17,7 +17,6 @@
 package base;
 
 import java.awt.*;
-import java.awt.geom.*;
 
 /**
  * @author Raphael
@@ -27,7 +26,7 @@ public abstract class Enemy extends DrawableObject {
 
     public double radiusOfVulnerability;
     public int health;
-    public int facingAngle;
+    public Direction facingAngle;
     protected double speed;
     protected final Color colInterior = new Color(250, 80, 40, 150);
     protected final Color colBorder = new Color(250, 80, 40);
@@ -53,33 +52,39 @@ public abstract class Enemy extends DrawableObject {
         if (pos >= Game.TILEWIDTH || firstRun) {
             //new point reached or first run
             firstRun = false;
+            if (theMap.getTile(theMap.transformFromScreenToMap(oldPoint)).isEndTile()) {
+                //reached end tile.
+                //TODO: Deal damage to the player.
+                Game.getEnemies().remove(this);
+                return;
+            }
             oldPoint = newPoint;
             newPoint = theMap.transformFromMapCoordinateToMapCenter(
-                    theMap.calcNewPoint(this, 
+                    theMap.calcNewPoint(this,
                             theMap.transformFromScreenToMap(oldPoint)));
             pos = pos % Game.TILEWIDTH;
             if (oldPoint.x < newPoint.x) {
-                facingAngle = 0;
-            } else if (oldPoint.y < newPoint.y) {
-                facingAngle = 1;
-            } else if (oldPoint.x > newPoint.x) {
-                facingAngle = 2;
+                facingAngle = Direction.EAST;
             } else if (oldPoint.y > newPoint.y) {
-                facingAngle = 3;
+                facingAngle = Direction.NORTH;
+            } else if (oldPoint.x > newPoint.x) {
+                facingAngle = Direction.WEST;
+            } else if (oldPoint.y < newPoint.y) {
+                facingAngle = Direction.SOUTH;
             }
         }
         center = (Point) oldPoint.clone();
         switch (facingAngle) {
-            case 0:
+            case EAST:
                 center.translate((int) pos, 0);
                 break;
-            case 1:
+            case NORTH:
                 center.translate(0, (int) -pos);
                 break;
-            case 2:
+            case WEST:
                 center.translate((int) -pos, 0);
                 break;
-            case 3:
+            case SOUTH:
                 center.translate(0, (int) pos);
                 break;
         }
@@ -88,9 +93,9 @@ public abstract class Enemy extends DrawableObject {
     @Override
     public void paint(Graphics2D g) {
         g.translate(center.x, center.y);
-        g.rotate(-facingAngle / 2 * Math.PI);
+        g.rotate(-(double) facingAngle.getNewdegree() / 2 * Math.PI);
         paintEnemy(g);
-        g.rotate(facingAngle / 2 * Math.PI);
+        g.rotate((double) facingAngle.getNewdegree() / 2 * Math.PI);
         g.translate(-center.x, -center.y);
     }
 
