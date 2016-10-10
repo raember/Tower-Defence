@@ -66,6 +66,15 @@ public class GameForm extends Canvas {
 
     private boolean isRunning;
     private int balance = 500;
+    private int lives = 15;
+
+    public void dealDamage() {
+        lives--;
+        if (lives == 0) {
+            //Game over
+            isRunning = false;
+        }
+    }
 
     private int width = 800;
     private int height = 600;
@@ -79,9 +88,7 @@ public class GameForm extends Canvas {
     }
     public final int MAPOFFSETX = 54;
     public final int MAPOFFSETY = 23;
-    public final int PAINTMARGIN = 10;
-    private final int WIDTHCORRECTION = -10;
-    private final int HEIGHTCORRECTION = -10;
+    public final int PAINTMARGIN = 0;
 
     private final long NSPS = 1000000000;
     private final int NSPMS = 1000000;
@@ -185,15 +192,16 @@ public class GameForm extends Canvas {
 
         //Now print some data.
         g.setFont(new Font("Consolas", 0, 15));
-        g.drawString("TIME: " + String.format("%.2f", currentTime), 5, 20);
+        g.drawString("LIVES: " + lives, 5, 20);
         g.drawString("BALANCE: " + balance, 5, 50);
+        g.drawString("TIME: " + String.format("%.2f", currentTime), 5, 70);
         Point p = MOUSE.getPoint();
-        g.drawString("POS: " + p.x + ", " + p.y, 5, 70);
+        g.drawString("POS: " + p.x + ", " + p.y, 5, 120);
         Point p2 = currentMap.translateFromAbsToMap(p);
         g.drawString("MAP POS: " + p2.x + ", "
-                + p2.y, 5, 100);
+                + p2.y, 5, 150);
         p = currentMap.transformFromScreenToMap(p2);
-        g.drawString("POS: " + p.x + ", " + p.y, 5, 130);
+        g.drawString("POS: " + p.x + ", " + p.y, 5, 180);
     }
 
     public void update(double deltatime, double abstime) {
@@ -213,6 +221,7 @@ public class GameForm extends Canvas {
         currentMap.update(deltatime, abstime);
         buildManager.update(deltatime, abstime);
         listEnemies.forEach(e -> e.update(deltatime, abstime));
+        listEnemies.removeIf(e -> e.health <= 0);
         listTowers.forEach(t -> t.update(deltatime, abstime));
         listBullets.forEach(b -> b.update(deltatime, abstime));
     }

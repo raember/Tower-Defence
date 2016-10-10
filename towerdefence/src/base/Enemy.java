@@ -52,10 +52,11 @@ public abstract class Enemy extends DrawableObject {
         if (pos >= Game.TILEWIDTH || firstRun) {
             //new point reached or first run
             firstRun = false;
-            if (theMap.getTile(theMap.transformFromScreenToMap(oldPoint)).isEndTile()) {
+            if (theMap.getTile(theMap.transformFromScreenToMap(newPoint)).isEndTile()) {
                 //reached end tile.
                 //TODO: Deal damage to the player.
-                Game.getEnemies().remove(this);
+                Game.dealDamage();
+                destroy();
                 return;
             }
             oldPoint = newPoint;
@@ -100,4 +101,8 @@ public abstract class Enemy extends DrawableObject {
     }
 
     protected abstract void paintEnemy(Graphics2D g);
+
+    private void destroy() {
+        health = 0;
+    }
 }

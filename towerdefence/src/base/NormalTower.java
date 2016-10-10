@@ -29,7 +29,7 @@ public class NormalTower extends Tower {
         cost = 100;
         health = 100;
         level = 1;
-        range = 300d;
+        range = 60d;
         maxAngularSpeed = 0.8;
         colBase = new Color(0, 120, 255, 150);
         colBaseBorder = new Color(0, 120, 255, 150);
@@ -39,13 +39,13 @@ public class NormalTower extends Tower {
 
     @Override
     protected void paintHead(Graphics2D g, int width) {
+        //interior
         g.setColor(colHead);
-        //frame
         g.setStroke(new BasicStroke(3));
         g.fillRect(-width / 4, -width / 4, width / 2, width / 2); //center square
         g.fillRect(width / 4, -width / 8, width / 2, width / 4); //cannon
+        //frame
         g.setColor(colHeadBorder);
-        //interior
         g.setStroke(new BasicStroke(1));
         g.drawRect(-width / 4, -width / 4, width / 2, width / 2); //center square
         g.drawRect(width / 4, -width / 8, width / 2, width / 4); //cannon

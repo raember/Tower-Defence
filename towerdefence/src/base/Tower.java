@@ -48,14 +48,14 @@ public abstract class Tower extends DrawableObject {
     protected void handleEnemies() {
         ListOf<Enemy> nearestEnemies = findNearestEnemies(center, range);
         if (!nearestEnemies.any()) {
-            //angularSpeed = 0d;
+            angularSpeed = 0d;
             return;
         }
         if (lastEnemy == null || !nearestEnemies.contains(lastEnemy)) {
             lastEnemy = nearestEnemies.first();
         }
         if (isFacing(lastEnemy.center)) {
-            shootEnemy(lastEnemy);
+//            shootEnemy(lastEnemy);
         } else {
             angularSpeed = face(lastEnemy.center);
         }
@@ -82,14 +82,9 @@ public abstract class Tower extends DrawableObject {
                 <= Double.MIN_NORMAL;
     }
 
-    //FIXME: Fix detection of direction for angular movement.
     protected double face(Point p) {
-        double desiredAngle = Math.atan2(p.y - center.y, p.x - center.x);
-        if (Math.abs(desiredAngle - facingAngle) < Math.PI) {
-            return maxAngularSpeed;
-        } else {
-            return -maxAngularSpeed;
-        }
+        double desiredAngle = Math.atan2(center.y - p.y, p.x - center.x);
+        return Math.signum(desiredAngle - facingAngle) * maxAngularSpeed;
     }
 
     protected void shootEnemy(Enemy enemy) {
@@ -108,6 +103,7 @@ public abstract class Tower extends DrawableObject {
         if (Math.abs(desiredAngle - facingAngle) <= deltaAngle) {
             facingAngle = desiredAngle;
             angularSpeed = 0d;
+            System.out.println(desiredAngle);
         } else {
             facingAngle += deltaAngle;
         }
