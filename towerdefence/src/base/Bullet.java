@@ -16,51 +16,91 @@
  */
 package base;
 
-import java.awt.Graphics2D;
-import java.awt.Point;
+import java.awt.*;
 
 /**
+ * Represents a bullet
  * @author Raphael
  * @date 26.09.2016
  */
-public abstract class Bullet extends DrawableObject {
+public abstract class Bullet extends PositionableObject {
 
-    public double rangeOfImpact;
+    /**
+     * Specifies how much damage the bullet inflicts an enemy when hit
+     */
     public int damage;
+    /**
+     * The angle at which the bullet has been shot
+     */
     public double facingAngle;
+    /**
+     * The speed at which the bullet travels
+     */
     public double speed;
+    private Point start;
     private double pos = 0d;
 
-    public Bullet(GameForm Game) {
+    /**
+     * Constructor of a bullet
+     * @param game game object for backreference
+     */
+    public Bullet(GameForm Game, Point start) {
         super(Game);
+        this.start = start;
     }
 
     @Override
     public void update(double deltatime, double abstime) {
-        double tan = Math.tan(this.facingAngle);
-        double delta = deltatime * speed;
-        center.translate((int) (delta * tan), (int) (delta - tan));
-        for (Enemy tempEnemy : Game.getEnemies().where(e
-                -> e.center.distance(center)
-                <= rangeOfImpact + e.radiusOfVulnerability)) {
-            damageEnemy(tempEnemy);
+        pos += deltatime * speed;
+        Rectangle theMap = Game.getMap().getRectangle();
+        Point pnt = Game.getMap().TLMapToAbs(getAbsPosition());
+        if (!theMap.contains(pnt)) {
+            destroy();
+            return;
+        }
+
+        for (Enemy e : Game.getEnemies()) {
+            if (e.getAbsPosition().distance(getAbsPosition())
+                    <= e.radiusOfVulnerability * Game.TILEWIDTH) {
+                encounterEnemy(e);
+            }
         }
     }
 
+    /**
+     * Specifies behaviour when hitting an enemy
+     * @param e
+     */
+    public abstract void encounterEnemy(Enemy e);
+
     @Override
     public void paint(Graphics2D g) {
-        g.translate(-center.x, -center.y);
+        double cos = Math.cos(facingAngle);
+        double sin = Math.sin(facingAngle);
+        Point base = (Point) position.clone();
+        base = Game.getMap().TFMapCoordinateToMapCenter(base);
+        base.translate((int) (pos * cos * Game.TILEWIDTH), (int) (pos * -sin
+                * Game.TILEWIDTH));
+        g.translate(base.x, base.y);
+        g.rotate(-facingAngle, 0, 0);
         paintBullet(g);
-        g.translate(center.x, center.y);
+        g.rotate(facingAngle, 0, 0);
+        g.translate(-base.x, -base.y);
+    }
+
+    @Override
+    public Point getAbsPosition() {
+        double cos = Math.cos(facingAngle);
+        double sin = Math.sin(facingAngle);
+        Point pnt = Game.getMap().TFMapCoordinateToMapCenter(position);
+        pnt.translate((int) (pos * cos * Game.TILEWIDTH), (int) (pos * -sin
+                * Game.TILEWIDTH));
+        return pnt;
     }
 
     protected abstract void paintBullet(Graphics2D g);
 
     protected void damageEnemy(Enemy enemy) {
         enemy.health -= damage;
-    }
-
-    protected void destroy() {
-        Game.getBullets().remove(this);
     }
 }

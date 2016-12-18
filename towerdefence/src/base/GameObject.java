@@ -19,6 +19,7 @@ package base;
 import java.awt.Graphics;
 
 /**
+ * Specifies a game object
  * @author Raphael
  * @date 21.09.2016
  */
@@ -26,9 +27,18 @@ public abstract class GameObject {
 
     protected GameForm Game;
 
+    /**
+     * Constructor of a game object
+     * @param game Game object for backreference
+     */
     public GameObject(GameForm game) {
         this.Game = game;
     }
 
+    /**
+     * Update method for calculating the actions between the frames
+     * @param deltatime time difference between last call and current call
+     * @param abstime   absolute time
+     */
     public abstract void update(double deltatime, double abstime);
 }

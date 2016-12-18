@@ -16,26 +16,35 @@
  */
 package base;
 
-import java.awt.Color;
-import java.awt.Graphics2D;
+import java.awt.*;
 
 /**
+ * Represents a normal bullet
  * @author Raphael
  * @date 10.10.2016
  */
 public class NormalBullet extends Bullet {
 
-    public NormalBullet(GameForm Game) {
-        super(Game);
-        rangeOfImpact = 15d;
+    /**
+     * Constructor of a normal bullet
+     * @param game game object for backreference
+     */
+    public NormalBullet(GameForm Game, Point start) {
+        super(Game, start);
         damage = 20;
-        speed = 100d;
+        speed = 2d;
     }
 
     @Override
     protected void paintBullet(Graphics2D g) {
-        g.setColor(Color.red);
+        g.setColor(Color.CYAN);
         g.fillOval(0, 0, 5, 5);
+    }
+
+    @Override
+    public void encounterEnemy(Enemy e) {
+        e.health -= damage;
+        destroy();
     }
 
 }

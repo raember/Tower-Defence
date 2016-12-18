@@ -22,74 +22,120 @@ import java.awt.Graphics2D;
 import java.awt.Point;
 
 /**
+ * Represents a tower object
  * @author Raphael
  * @date 26.09.2016
  */
-public abstract class Tower extends DrawableObject {
+public abstract class Tower extends PositionableObject {
 
     protected double facingAngle;
     protected double desiredAngle;
     protected double angularSpeed;
     protected double maxAngularSpeed;
     protected double range;
-    protected int level = 1;
-    public int health;
-    public int cost;
+    protected double shootingCooldown;
+    private double lastShot;
+    protected int level = 0;
+    protected ListOf<Integer> costs = new ListOf();
     protected Color colBase;
     protected Color colBaseBorder;
     protected Color colHead;
     protected Color colHeadBorder;
-    protected Enemy lastEnemy;
 
+    /**
+     * Constructor of a tower
+     * @param game game object for backreference
+     */
     public Tower(GameForm game) {
         super(game);
     }
 
-    protected void handleEnemies() {
-        ListOf<Enemy> nearestEnemies = findNearestEnemies(center, range);
-        if (!nearestEnemies.any()) {
+    protected void handleEnemies(double deltatime, double abstime) {
+        Enemy nearestEnemy = findNearestEnemies();
+        if (nearestEnemy == null) {
             angularSpeed = 0d;
             return;
         }
-        if (lastEnemy == null || !nearestEnemies.contains(lastEnemy)) {
-            lastEnemy = nearestEnemies.first();
+        if (isFacing(nearestEnemy) && (abstime - lastShot) >= shootingCooldown) {
+            lastShot = abstime;
+            shootEnemy(nearestEnemy);
         }
-        if (isFacing(lastEnemy.center)) {
-            shootEnemy(lastEnemy);
-        } else {
-            angularSpeed = face(lastEnemy.center);
-        }
+        face(nearestEnemy);
     }
 
-    protected ListOf<Enemy> findNearestEnemies(Point from, double range) {
-        ListOf<Enemy> nearestEnemy = new ListOf();
-        double distance = range;
+    protected Enemy findNearestEnemies() {
+        Enemy nearestEnemy = null;
+        double maxDist = range;
         for (Enemy e : Game.getEnemies()) {
-            double tempDistance = from.distance(e.center);
-            if (!nearestEnemy.any() || tempDistance < distance) {
-                nearestEnemy.add(e);
-                distance = tempDistance;
+            double tempDistance = getAbsPosition().distance(e.getAbsPosition())
+                    / Game.TILEWIDTH;
+            if (maxDist > tempDistance) {
+                maxDist = tempDistance;
+                nearestEnemy = e;
             }
         }
-        return nearestEnemy.sortAll((Enemy e1, Enemy e2)
-                -> Double.compare(e1.center.distance(from),
-                        e2.center.distance(from)));
+        return nearestEnemy;
     }
 
-    protected boolean isFacing(Point p) {
-        return Math.abs(Math.atan2(p.y - center.y,
-                p.x - center.x) - facingAngle)
-                <= Double.MIN_NORMAL;
+    /**
+     * Calculated the exact position on the map in absolute coordinates
+     * @return Object position
+     */
+    public Point getAbsPosition() {
+        return Game.getMap().TFMapCoordinateToMapCenter(position);
     }
 
-    protected double face(Point p) {
-        desiredAngle = Math.atan2(center.y - p.y, p.x - center.x);
-        return Math.signum(desiredAngle - facingAngle) * maxAngularSpeed;
+    protected boolean isFacing(Enemy e) {
+        return Math.abs(getAngleTo(e) - facingAngle) <= 0.05d;
+    }
+
+    private double getAngleTo(Enemy e) {
+        Point pEnemy = e.getAbsPosition();
+        Point pTower = getAbsPosition();
+        return Math.atan2(pTower.y - pEnemy.y, pEnemy.x - pTower.x);
+    }
+
+    private double getRemainingAngle() {
+        double angle = desiredAngle - facingAngle;
+        if (angle >= Math.PI) {
+            angle = angle - 2 * Math.PI;
+        }
+        return angle;
+    }
+
+    /**
+     * Gets the position of the object in map coordinates
+     * @return Object position
+     */
+    public Point getPosition() {
+        return position;
+    }
+
+    /**
+     * Sets the position of the object in map coordinates
+     * @param position Object position
+     */
+    public void setPosition(Point position) {
+        this.position = position;
+    }
+
+    /**
+     * Gets the costs for building/upgrading the tower
+     * @return costs
+     */
+    public int getCosts() {
+        return costs.get(level);
+    }
+
+    protected void face(Enemy e) {
+        desiredAngle = getAngleTo(e);
+        double deltaPhi = getRemainingAngle();
+        angularSpeed = Math.signum(deltaPhi) * maxAngularSpeed;
     }
 
     protected void shootEnemy(Enemy enemy) {
         Bullet tempBullet = createBullet();
-        tempBullet.center = center;
+        tempBullet.position = position;
         tempBullet.facingAngle = facingAngle;
         Game.getBullets().add(tempBullet);
     }
@@ -97,51 +143,36 @@ public abstract class Tower extends DrawableObject {
     @Override
     public void update(double deltatime, double abstime) {
         double deltaAngle = deltatime * angularSpeed;
-        double desiredA = desiredAngle;
-        if (desiredAngle < 0) {
-            desiredA += 2 * Math.PI;
-        }
-        if (Math.abs(desiredA - facingAngle) <= deltaAngle) {
-            facingAngle = desiredA;
-            angularSpeed = 0d;
+        //Adjust the angle if deltaAngle would exceed the desired one
+        if (Math.abs(desiredAngle - facingAngle) <= deltaAngle) {
+            facingAngle = desiredAngle;
         } else {
             facingAngle += deltaAngle;
         }
-        System.out.println(desiredA);
-        if (health <= 0) {
-            destroy();
-        }
-        handleEnemies();
+        facingAngle = ((facingAngle - Math.PI) % (2 * Math.PI)) + Math.PI;
+        handleEnemies(deltatime, abstime);
     }
 
     @Override
     public void paint(Graphics2D g) {
         int width = Game.TILEWIDTH;
-        g.translate(center.x, center.y);
+        Point base = Game.getMap().TFMapCoordinateToMapCenter(position);
+        g.translate(base.x, base.y);
         paintBase(g, width);
         g.rotate(-facingAngle, 0, 0);
         paintHead(g, width);
         g.rotate(facingAngle, 0, 0);
-        g.translate(-center.x, -center.y);
+        g.translate(-base.x, -base.y);
     }
 
-    private void paintBase(Graphics2D g, int width) {
-        g.setColor(Game.colWallTile);
-        g.fillRect(-width / 2, -width / 2, width, width);
-        g.setColor(colBase);
-        g.fillRect(-width / 2, -width / 2, width, width);
-        g.setColor(colBaseBorder);
-        g.setStroke(new BasicStroke(2));
-        g.drawRect(-width / 2, -width / 2, width, width);
-        g.setStroke(new BasicStroke(1));
-    }
+    protected abstract void paintBase(Graphics2D g, int width);
 
     protected abstract void paintHead(Graphics2D g, int width);
 
-    protected void destroy() {
-        Game.getTowers().remove(this);
-    }
-
+    /**
+     * Specifies how a levelup alters the tower
+     * @return true, if upgrade succeeds, else false
+     */
     public abstract boolean levelUp();
 
     protected abstract Bullet createBullet();

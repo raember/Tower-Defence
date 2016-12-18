@@ -17,7 +17,7 @@ package base;
  */
 
 /**
- * This class was built after the .Net-List.
+ * This class was built after the .NET-List.
  * https://msdn.microsoft.com/en-us/library/6sh2ey19(v=vs.110).aspx
  */
 import java.util.*;
@@ -25,6 +25,7 @@ import java.util.function.*;
 import java.util.stream.*;
 
 /**
+ * Generic list after the .NET-List.
  * @author Raphael Emberger
  */
 public class ListOf<T>

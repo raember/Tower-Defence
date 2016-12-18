@@ -38,6 +38,7 @@ import javax.swing.JFrame;
 import javax.swing.JPanel;
 
 /**
+ * Game form coordinating the whole game
  * @author Raphael
  * @date 29.09.2016
  */
@@ -55,9 +56,10 @@ public class GameForm extends Canvas {
     private ListOf<Tower> listTowers = new ListOf();
     private ListOf<Bullet> listBullets = new ListOf();
     private GameMap currentMap;
+    private EnemyWave waver;
     private BuildingManager buildManager = new BuildingManager(this);
 
-    private final String GAMETITLE = "Tower Defence";
+    private final String GAMETITLE = "Tower Defense";
     private final JFrame FRAME;
     private final JPanel PANEL;
     private final BufferStrategy BUFFER_STRATEGY;
@@ -65,29 +67,23 @@ public class GameForm extends Canvas {
     private final KeyInputHandler KEYBOARD = new KeyInputHandler();
 
     private boolean isRunning;
-    private int balance = 500;
+    private int balance = 300;
     private int lives = 15;
-
-    public void dealDamage() {
-        lives--;
-        if (lives == 0) {
-            //Game over
-            isRunning = false;
-        }
-    }
 
     private int width = 800;
     private int height = 600;
 
-    public int getWidth() {
-        return width;
-    }
-
-    public int getHeight() {
-        return height;
-    }
-    public final int MAPOFFSETX = 54;
-    public final int MAPOFFSETY = 23;
+    /**
+     * The horizontal offset of the map
+     */
+    public final int MAPOFFSETX = 200;
+    /**
+     * The vertical offset of the map
+     */
+    public final int MAPOFFSETY = 10;
+    /**
+     * The margin for the map within the window
+     */
     public final int PAINTMARGIN = 0;
 
     private final long NSPS = 1000000000;
@@ -97,6 +93,9 @@ public class GameForm extends Canvas {
     private final long TARGET_NSPF = NSPS / TARGET_FPS;
     private double currentTime;
 
+    /**
+     * The width of a single tile
+     */
     public final int TILEWIDTH = 30;
 
     public final Color colGainsboro = new Color(220, 220, 220);
@@ -106,6 +105,9 @@ public class GameForm extends Canvas {
     public final Color colWallTile = new Color(66, 66, 68);
     public final Color colTowerTile = new Color(66, 66, 150);
 
+    /**
+     * The game constructor Sets the necessary settings
+     */
     public GameForm() {
         FRAME = new JFrame(GAMETITLE);
         PANEL = (JPanel) FRAME.getContentPane();
@@ -129,30 +131,85 @@ public class GameForm extends Canvas {
         BUFFER_STRATEGY = getBufferStrategy();
     }
 
+    /**
+     * Deal damage to the player
+     */
+    public void dealDamage() {
+        lives--;
+        if (lives == 0) {
+            //Game over
+            isRunning = false;
+        }
+    }
+
+    /**
+     * Get the width of the window
+     * @return the window width
+     */
+    public int getWidth() {
+        return width;
+    }
+
+    /**
+     * Get the height of the window
+     * @return the window height
+     */
+    public int getHeight() {
+        return height;
+    }
+
+    /**
+     * The game state
+     * @return whether the game is running or not
+     */
     public boolean isGameRunning() {
         return isRunning;
     }
 
+    /**
+     * The player balance
+     * @return
+     */
     public int getBalance() {
         return balance;
     }
 
+    /**
+     * Set player balance
+     * @param bal new balance
+     */
     public void setBalance(int bal) {
         balance = bal;
     }
 
+    /**
+     * Handle to the enemy list
+     * @return List of enemies
+     */
     public ListOf<Enemy> getEnemies() {
         return listEnemies;
     }
 
+    /**
+     * Handle to the tower list
+     * @return List of towers
+     */
     public ListOf<Tower> getTowers() {
         return listTowers;
     }
 
+    /**
+     * Handle to the bullet list
+     * @return List of bullets
+     */
     public ListOf<Bullet> getBullets() {
         return listBullets;
     }
 
+    /**
+     * Handle to the game map
+     * @return game map
+     */
     public GameMap getMap() {
         return currentMap;
     }
@@ -164,6 +221,10 @@ public class GameForm extends Canvas {
         FRAME.pack();
     }
 
+    /**
+     * Overrides the paint method of the Canvas
+     * @param gObj Graphics object handle
+     */
     @Override
     public void paint(Graphics gObj) {
         Graphics2D g = (Graphics2D) gObj;
@@ -171,7 +232,7 @@ public class GameForm extends Canvas {
             return;
         }
 
-        //Translate to th eupper left corner of the map.
+        //Translate to the upper left corner of the map.
         g.translate(MAPOFFSETX, MAPOFFSETY);
 
         //Paint the GameObjects in a adequate order.
@@ -197,42 +258,58 @@ public class GameForm extends Canvas {
         g.drawString("TIME: " + String.format("%.2f", currentTime), 5, 70);
         Point p = MOUSE.getPoint();
         g.drawString("POS: " + p.x + ", " + p.y, 5, 120);
-        Point p2 = currentMap.translateFromAbsToMap(p);
+        Point p2 = currentMap.TLAbsToMap(p);
         g.drawString("MAP POS: " + p2.x + ", "
                 + p2.y, 5, 150);
-        p = currentMap.transformFromScreenToMap(p2);
+        p = currentMap.TFScreenToMap(p2);
         g.drawString("POS: " + p.x + ", " + p.y, 5, 180);
     }
 
+    /**
+     * Update method which gets called every loop
+     * @param deltatime time difference between last call and current call
+     * @param abstime   absolute time
+     */
     public void update(double deltatime, double abstime) {
         if (MOUSE.getLeftButton()) {
-            Point pos = currentMap.translateFromAbsToMap(MOUSE.getPoint());
+            Point pos = MOUSE.getPoint();
             Rectangle mapArea = currentMap.getRectangle();
             if (mapArea.contains(pos)) {
-                Tower newTower = new NormalTower(this);
-                buildManager.tryPlaceTower(newTower, pos);
+                buildManager.clickOnMap(currentMap.TLAbsToMap(pos));
             }
         }
-        if (KEYBOARD.isSpacePressed()) {
-            Enemy en = new NormalEnemy(this);
-            currentMap.sendEnemy(en);
-            listEnemies.add(en);
+        if (KEYBOARD.isSpacePressed() && !waver.isWaveRunning()) {
+            waver.runWave();
         }
         currentMap.update(deltatime, abstime);
         buildManager.update(deltatime, abstime);
+        waver.update(deltatime, abstime);
+
+        listEnemies.removeIf(e -> e.isDestroyed());
+        listTowers.removeIf(t -> t.isDestroyed());
+        listBullets.removeIf(b -> b.isDestroyed());
+
         listEnemies.forEach(e -> e.update(deltatime, abstime));
-        listEnemies.removeIf(e -> e.health <= 0);
         listTowers.forEach(t -> t.update(deltatime, abstime));
         listBullets.forEach(b -> b.update(deltatime, abstime));
     }
 
+    /**
+     * Starts the game
+     */
     public void startGame() {
         if (loadMap("Map1.csv")) {
             isRunning = true;
+            waver = new EnemyWave(this);
             doGameLoop();
         }
     }
 
+    /**
+     * Loads map out of a csv file and loads it into the game
+     * @param csv path to the csv file
+     * @return true if loading succeeds, else false
+     */
     public boolean loadMap(String csv) {
         String path = GameForm.class.getProtectionDomain().getCodeSource().
                 getLocation().getPath();
@@ -297,17 +374,6 @@ public class GameForm extends Canvas {
         }
     }
 
-    /**
-     * A class to handle keyboard input from the user. The class handles both
-     * dynamic input during game play, i.e. left/right and shoot, and more
-     * static type input (i.e. press any key to continue)
-     *
-     * This has been implemented as an inner class more through habbit then
-     * anything else. Its perfectly normal to implement this as seperate class
-     * if slight less convienient.
-     *
-     * @author Kevin Glass
-     */
     private class KeyInputHandler extends KeyAdapter {
 
         private boolean isSpace;

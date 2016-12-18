@@ -17,10 +17,12 @@
 package base;
 
 /**
+ * Represents a direction
  * @author raphael
  * @date 10.10.2016
  */
 public enum Direction {
+
     NORTH(1), EAST(0), SOUTH(3), WEST(2);
     private int newdegree;
 
@@ -28,6 +30,10 @@ public enum Direction {
         this.newdegree = newdegree;
     }
 
+    /**
+     * Gets the angle in newdegree
+     * @return
+     */
     public int getNewdegree() {
         return newdegree;
     }

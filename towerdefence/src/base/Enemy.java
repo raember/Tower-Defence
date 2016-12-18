@@ -19,13 +19,28 @@ package base;
 import java.awt.*;
 
 /**
+ * Object representing an enemy
  * @author Raphael
  * @date 26.09.2016
  */
-public abstract class Enemy extends DrawableObject {
+public abstract class Enemy extends PositionableObject {
 
+    /**
+     * Radius within a bullet triggers damage
+     */
     public double radiusOfVulnerability;
+    /**
+     * Health of the enemy
+     */
     public int health;
+    /**
+     * Amount of wealth to be added to the players balance in case the enemy
+     * gets destroyed
+     */
+    public int wealth;
+    /**
+     * Direction towards the enemy is driving
+     */
     public Direction facingAngle;
     protected double speed;
     protected final Color colInterior = new Color(250, 80, 40, 150);
@@ -34,36 +49,41 @@ public abstract class Enemy extends DrawableObject {
     private Point newPoint;
     private double pos;
 
+    /**
+     * Constructor of an enemy
+     * @param game game object for backreference
+     */
     public Enemy(GameForm game) {
         super(game);
     }
 
     @Override
     public void update(double deltatime, double abstime) {
+        if (health <= 0) {
+            destroy();
+            return;
+        }
         GameMap theMap = Game.getMap();
         pos += deltatime * speed;
         boolean firstRun = false;
         if (oldPoint == null) {
             //first run
-            oldPoint = center;
+            oldPoint = position;
             newPoint = oldPoint;
             firstRun = true;
         }
-        if (pos >= Game.TILEWIDTH || firstRun) {
+        if (pos >= 1d || firstRun) {
             //new point reached or first run
             firstRun = false;
-            if (theMap.getTile(theMap.transformFromScreenToMap(newPoint)).isEndTile()) {
+            if (theMap.getTile(newPoint).isEndTile()) {
                 //reached end tile.
-                //TODO: Deal damage to the player.
                 Game.dealDamage();
                 destroy();
                 return;
             }
             oldPoint = newPoint;
-            newPoint = theMap.transformFromMapCoordinateToMapCenter(
-                    theMap.calcNewPoint(this,
-                            theMap.transformFromScreenToMap(oldPoint)));
-            pos = pos % Game.TILEWIDTH;
+            newPoint = theMap.calcNewWayPoint(this, oldPoint);
+            pos = pos % 1d;
             if (oldPoint.x < newPoint.x) {
                 facingAngle = Direction.EAST;
             } else if (oldPoint.y > newPoint.y) {
@@ -74,35 +94,44 @@ public abstract class Enemy extends DrawableObject {
                 facingAngle = Direction.SOUTH;
             }
         }
-        center = (Point) oldPoint.clone();
+        position = (Point) oldPoint.clone();
+    }
+
+    @Override
+    public Point getAbsPosition() {
+        Point absPos = Game.getMap().TFMapCoordinateToMapCenter(position);
         switch (facingAngle) {
             case EAST:
-                center.translate((int) pos, 0);
+                absPos.translate((int) (pos * Game.TILEWIDTH), 0);
                 break;
             case NORTH:
-                center.translate(0, (int) -pos);
+                absPos.translate(0, (int) (-pos * Game.TILEWIDTH));
                 break;
             case WEST:
-                center.translate((int) -pos, 0);
+                absPos.translate((int) (-pos * Game.TILEWIDTH), 0);
                 break;
             case SOUTH:
-                center.translate(0, (int) pos);
+                absPos.translate(0, (int) (pos * Game.TILEWIDTH));
                 break;
         }
+        return absPos;
     }
 
     @Override
     public void paint(Graphics2D g) {
-        g.translate(center.x, center.y);
+        Point base = getAbsPosition();
+        g.translate(base.x, base.y);
         g.rotate(-(double) facingAngle.getNewdegree() / 2 * Math.PI);
         paintEnemy(g);
         g.rotate((double) facingAngle.getNewdegree() / 2 * Math.PI);
-        g.translate(-center.x, -center.y);
+        g.translate(-base.x, -base.y);
     }
 
     protected abstract void paintEnemy(Graphics2D g);
 
-    private void destroy() {
-        health = 0;
+    @Override
+    public void destroy() {
+        Game.setBalance(Game.getBalance() + wealth);
+        super.destroy();
     }
 }

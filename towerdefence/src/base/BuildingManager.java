@@ -19,11 +19,16 @@ package base;
 import java.awt.Point;
 
 /**
+ * Building manager to allow building tower
  * @author Raphael
  * @date 02.10.2016
  */
 public class BuildingManager extends GameObject {
 
+    /**
+     * Constructor of a building manager
+     * @param game game object for backreference
+     */
     public BuildingManager(GameForm game) {
         super(game);
     }
@@ -32,20 +37,37 @@ public class BuildingManager extends GameObject {
     public void update(double deltatime, double abstime) {
     }
 
-    public void tryPlaceTower(Tower tower, Point center) {
-        int bal = Game.getBalance();
+    /**
+     * Handles a click on the map signalising the need for building a tower or
+     * upgrading one.
+     * @param position Position of clicked tile
+     */
+    public void clickOnMap(Point position) {
         GameMap theMap = Game.getMap();
-        center = theMap.transformFromScreenToMap(center);
-        tower.center = theMap.transformFromMapCoordinateToMapCenter(center);
-        if (bal >= tower.cost
-                && theMap.canPlaceTower(center)) {
-            Game.setBalance(bal - tower.cost);
-            Game.getTowers().add(tower);
+        position = theMap.TFScreenToMap(position);
+        if (theMap.canPlaceTower(position)) {
+            Tower twr = getTower(position);
+            int bal = Game.getBalance();
+            if (twr == null) {
+                //Place new tower
+                twr = new NormalTower(Game);
+                if (twr.getCosts() <= bal) {
+                    twr.setPosition(position);
+                    Game.setBalance(bal - twr.getCosts());
+                    Game.getTowers().add(twr);
+                }
+            } else {
+                //TODO: Implement level up
+            }
         }
     }
 
-    public void upgradeTower(Point center) {
-
+    /**
+     * Gets a tower on a certain map coordinate if present
+     * @param position Coordinate of tower to get
+     * @return The tower if found, else null
+     */
+    public Tower getTower(Point position) {
+        return Game.getTowers().first(t -> t.getPosition().equals(position));
     }
-
 }

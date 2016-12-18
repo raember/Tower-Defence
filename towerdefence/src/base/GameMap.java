@@ -23,11 +23,16 @@ import java.nio.file.*;
 import java.util.Random;
 
 /**
- *
+ * Represents a game map
  * @author raphael
+ * @date 02.10.2016
  */
 public final class GameMap extends DrawableObject {
 
+    /**
+     * Constructor of a game map
+     * @param game game object for backreference
+     */
     public static GameMap load(File csv, GameForm game) {
         if (!csv.exists()) {
             return null;
@@ -75,42 +80,78 @@ public final class GameMap extends DrawableObject {
         super(game);
     }
 
+    /**
+     * Gets the absolut map width
+     * @return the map width
+     */
     public int getWidth() {
         return Game.TILEWIDTH * data[0].length;
     }
 
+    /**
+     * Gets the absolute map height
+     * @return the map height
+     */
     public int getHeight() {
         return Game.TILEWIDTH * data.length;
     }
 
-    public Point transformFromScreenToMap(Point p) {
+    /**
+     * Transforms an absolute coordinate to a map coordinate
+     * @param p Point on map area
+     * @return Map coordinate
+     */
+    public Point TFScreenToMap(Point p) {
         return new Point(p.x / Game.TILEWIDTH, p.y / Game.TILEWIDTH);
     }
 
-    public Point transformFromMapCoordinateToMapCenter(Point p) {
+    /**
+     * Transforms a map coordinate to an absolute coordinate
+     * @param p Map coordinate
+     * @return Point on map area
+     */
+    public Point TFMapCoordinateToMapCenter(Point p) {
         return new Point(p.x * Game.TILEWIDTH + Game.TILEWIDTH / 2,
                 p.y * Game.TILEWIDTH + Game.TILEWIDTH / 2);
     }
 
-    public Point translateFromMapToAbs(Point p) {
+    /**
+     * Translates a point from the map area onto the screen
+     * @param p Point on map
+     * @return Point on screen
+     */
+    public Point TLMapToAbs(Point p) {
         Point temp = (Point) p.clone();
         temp.translate(Game.MAPOFFSETX, Game.MAPOFFSETY);
         return temp;
     }
 
-    public Point translateFromAbsToMap(Point p) {
+    /**
+     * Translates a point from the screen onto the map area
+     * @param p Point on screen
+     * @return Point on map
+     */
+    public Point TLAbsToMap(Point p) {
         Point temp = (Point) p.clone();
         temp.translate(-Game.MAPOFFSETX, -Game.MAPOFFSETY);
         return temp;
     }
 
+    /**
+     * Checks whether the player can place a tower at specific map coordinates
+     * @param mapCoordinate Point where new tower should be placed
+     * @return true, if placement possible, else false
+     */
     public boolean canPlaceTower(Point mapCoordinate) {
         return data[mapCoordinate.y][mapCoordinate.x] == MapData.TOWER;
     }
 
+    /**
+     * Sends enemy at start tile
+     * @param e The enemy to send
+     */
     public void sendEnemy(Enemy e) {
-        e.center = new Point(startPoint.x * Game.TILEWIDTH + Game.TILEWIDTH / 2,
-                startPoint.y * Game.TILEWIDTH + Game.TILEWIDTH / 2);
+        e.position = new Point(startPoint.x, startPoint.y);
     }
 
     @Override
@@ -134,16 +175,31 @@ public final class GameMap extends DrawableObject {
     public void update(double deltatime, double abstime) {
     }
 
+    /**
+     * Gets a rectangle representing a border around the map
+     * @return map border
+     */
     public Rectangle getRectangle() {
         return new Rectangle(Game.MAPOFFSETX, Game.MAPOFFSETY,
                 Game.getWidth(), Game.getHeight());
     }
 
+    /**
+     * Gets a tile from a specific map coordinate
+     * @param mapcoordinate coordinate of tile to get
+     * @return tile
+     */
     public MapData getTile(Point mapcoordinate) {
         return data[mapcoordinate.y][mapcoordinate.x];
     }
 
-    public Point calcNewPoint(Enemy e, Point oldPoint) {
+    /**
+     * Calculates new way point for enemy
+     * @param e        Enemy
+     * @param oldPoint the enemys last point
+     * @return new coordinate
+     */
+    public Point calcNewWayPoint(Enemy e, Point oldPoint) {
         int maxX = data[0].length - 1;
         int maxY = data.length - 1;
         Point newPoint = null;

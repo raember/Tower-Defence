@@ -19,6 +19,7 @@ package base;
 import java.awt.Graphics2D;
 
 /**
+ * Represents a map tile
  * @author raphael
  * @date 10.10.2016
  */
@@ -30,12 +31,11 @@ public enum MapData {
     END(3),
     TOWER(4);
 
-    private int data;
-
-    private MapData(int data) {
-        this.data = data;
-    }
-
+    /**
+     * Tile constructor
+     * @param data Tile data number. Refer to constants
+     * @return An object representing a tile
+     */
     public static MapData parse(int data) {
         for (MapData md : MapData.values()) {
             if (md.data == data) {
@@ -45,6 +45,20 @@ public enum MapData {
         return null;
     }
 
+    private int data;
+
+    private MapData(int data) {
+        this.data = data;
+    }
+
+    /**
+     * Paints a tile
+     * @param g     The graphics object
+     * @param game  The game object
+     * @param x     The x coordinate
+     * @param y     The y coordinate
+     * @param width The tile width
+     */
     public void paint(Graphics2D g, GameForm game, int x, int y, int width) {
         switch (this) {
             case WALL:
@@ -69,19 +83,36 @@ public enum MapData {
         }
     }
 
+    /**
+     * Specifies whether the tile is walkable
+     * @return true if walkable, else false
+     */
     public boolean isWalkable() {
         return isPathTile() || isEndTile() || isStartTile();
     }
 
+    /**
+     * Specifies whether the tile is an end tile
+     * @return true if end tile, else false
+     */
     public boolean isEndTile() {
         return data == 3;
     }
 
+    /**
+     * Specifies whether the tile is a path tile
+     * @return true if path tile, else false
+     */
     public boolean isPathTile() {
         return data == 1;
     }
 
+    /**
+     * Specifies whether the tile is a start tile
+     * @return true if start tile, else false
+     */
     public boolean isStartTile() {
         return data == 2;
     }
+
 }

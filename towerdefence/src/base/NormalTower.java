@@ -19,18 +19,25 @@ package base;
 import java.awt.*;
 
 /**
+ * Represents a normal tower
  * @author Raphael
  * @date 02.10.2016
  */
 public class NormalTower extends Tower {
 
+    /**
+     * Constructor of a normal tower
+     * @param game game object for backreference
+     */
     public NormalTower(GameForm game) {
         super(game);
-        cost = 100;
-        health = 100;
-        level = 1;
-        range = 60d;
-        maxAngularSpeed = 0.8;
+        costs.add(100);
+        costs.add(250);
+        costs.add(600);
+        costs.add(1500);
+        range = 5d;
+        shootingCooldown = 1.4;
+        maxAngularSpeed = 1.8;
         colBase = new Color(0, 120, 255, 150);
         colBaseBorder = new Color(0, 120, 255, 150);
         colHead = colBase;
@@ -52,13 +59,25 @@ public class NormalTower extends Tower {
     }
 
     @Override
+    protected void paintBase(Graphics2D g, int width) {
+        g.setColor(Game.colWallTile);
+        g.fillRect(-width / 2, -width / 2, width, width);
+        g.setColor(colBase);
+        g.fillRect(-width / 2, -width / 2, width, width);
+        g.setColor(colBaseBorder);
+        g.setStroke(new BasicStroke(2));
+        g.drawRect(-width / 2, -width / 2, width, width);
+        g.setStroke(new BasicStroke(1));
+    }
+
+    @Override
     public boolean levelUp() {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
     @Override
     protected Bullet createBullet() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        return new NormalBullet(Game, position);
     }
 
 }

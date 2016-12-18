@@ -20,17 +20,23 @@ import java.awt.BasicStroke;
 import java.awt.Graphics2D;
 
 /**
+ * Represents a normal enemy
  * @author Raphael
  * @date 08.10.2016
  */
 public class NormalEnemy extends Enemy {
 
+    /**
+     * Constructor of a normal enemy
+     * @param game game object for backreference
+     */
     public NormalEnemy(GameForm game) {
         super(game);
-        radiusOfVulnerability = 6d;
+        radiusOfVulnerability = 0.9d;
         health = 50;
+        wealth = 20;
         facingAngle = Direction.NORTH;
-        speed = 50d;
+        speed = 1.5d;
     }
 
     @Override
