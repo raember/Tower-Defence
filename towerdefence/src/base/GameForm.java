@@ -252,17 +252,17 @@ public class GameForm extends Canvas {
         g.translate(-MOUSE.xMouse, -MOUSE.yMouse);
 
         //Now print some data.
-        g.setFont(new Font("Consolas", 0, 15));
+//        g.setFont(new Font("Consolas", 0, 15));
         g.drawString("LIVES: " + lives, 5, 20);
         g.drawString("BALANCE: " + balance, 5, 50);
         g.drawString("TIME: " + String.format("%.2f", currentTime), 5, 70);
-        Point p = MOUSE.getPoint();
-        g.drawString("POS: " + p.x + ", " + p.y, 5, 120);
-        Point p2 = currentMap.TLAbsToMap(p);
-        g.drawString("MAP POS: " + p2.x + ", "
-                + p2.y, 5, 150);
-        p = currentMap.TFScreenToMap(p2);
-        g.drawString("POS: " + p.x + ", " + p.y, 5, 180);
+//        Point p = MOUSE.getPoint();
+//        g.drawString("POS: " + p.x + ", " + p.y, 5, 120);
+//        Point p2 = currentMap.TLAbsToMap(p);
+//        g.drawString("MAP POS: " + p2.x + ", "
+//                + p2.y, 5, 150);
+//        p = currentMap.TFScreenToMap(p2);
+//        g.drawString("POS: " + p.x + ", " + p.y, 5, 180);
     }
 
     /**

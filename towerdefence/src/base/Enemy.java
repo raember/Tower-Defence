@@ -78,7 +78,7 @@ public abstract class Enemy extends PositionableObject {
             if (theMap.getTile(newPoint).isEndTile()) {
                 //reached end tile.
                 Game.dealDamage();
-                destroy();
+                super.destroy();
                 return;
             }
             oldPoint = newPoint;
